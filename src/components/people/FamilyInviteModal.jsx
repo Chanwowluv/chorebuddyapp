@@ -209,7 +209,7 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
             <div className="space-y-4">
               <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3">
                 <p className="body-font-light text-xs text-orange-800">
-                  💡 Generate a temporary linking code. Share this code with the family member, who can use it to join your family. The code expires in 24 hours.
+                  💡 Generate a temporary linking code. Share this code with the family member, who can use it to join your family. The code expires in 48 hours.
                 </p>
               </div>
 

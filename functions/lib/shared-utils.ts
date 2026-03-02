@@ -54,7 +54,7 @@ export const SUBSCRIPTION_TIERS = {
 // Frontend source of truth for tier limits: src/constants/subscriptionTiers.js
 // Keep this value in sync when updating tier limits.
 export const MAX_FAMILY_SIZE = 50;
-export const CODE_EXPIRY_HOURS = 24;
+export const CODE_EXPIRY_HOURS = 48;
 
 export const TIER_MEMBER_LIMITS: Record<string, number> = {
   free: 6,
