@@ -53,11 +53,27 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
     return errorResponse('Family not found', 404);
   }
 
+  // Archive current code to history before generating new one
+  const codeHistory = (family.linking_code_history || []).slice();
+  if (family.linking_code) {
+    codeHistory.push({
+      code: family.linking_code,
+      generated_at: family.linking_code_generated_at || family.updated_at || family.updated_date,
+      expired_at: family.linking_code_expires,
+      use_count: family.linking_code_use_count || 0,
+      max_uses: family.linking_code_max_uses || 5,
+      used_by: family.linking_code_used_by || [],
+      status: family.linking_code_expires && new Date(family.linking_code_expires) < new Date() ? 'expired' : 'replaced',
+    });
+  }
+  // Keep only the last 10 entries
+  const trimmedHistory = codeHistory.slice(-10);
+
   // Generate new code
   const newCode = generateCode(6);
   const expiresAt = calculateExpiryDate(); // uses CODE_EXPIRY_HOURS (48h)
 
-  // Update family
+  // Update family with new code, reset usage counter, and save history
   await updateEntityWithEnv(
     base44,
     'Family',
@@ -65,6 +81,11 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
     {
       linking_code: newCode,
       linking_code_expires: expiresAt,
+      linking_code_max_uses: 5,
+      linking_code_use_count: 0,
+      linking_code_used_by: [],
+      linking_code_generated_at: new Date().toISOString(),
+      linking_code_history: trimmedHistory,
     },
     env
   );
@@ -74,6 +95,8 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
   return successResponse({
     linkingCode: newCode,
     expiresAt,
+    maxUses: 5,
+    useCount: 0,
   });
 }
 
@@ -81,6 +104,16 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
  * Join a family using a linking code
  */
 async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
+  // Rate limit: max 5 join attempts per hour to prevent brute-force
+  const joinRateLimit = checkRateLimit(user.id, 'join_family', 5, 60 * 60 * 1000);
+  if (!joinRateLimit.allowed) {
+    return errorResponseWithCode(
+      'Too many join attempts. Please wait before trying again.',
+      JOIN_ERROR_CODES.INVALID_CODE,
+      429
+    );
+  }
+
   // Validate and sanitize code
   const { valid, code: sanitizedCode, error } = sanitizeCode(linkingCode);
   if (!valid) {
@@ -116,6 +149,16 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
     }
   }
 
+  // Check if code has reached max uses
+  const maxUses = family.linking_code_max_uses || 5;
+  const currentUses = family.linking_code_use_count || 0;
+  if (currentUses >= maxUses) {
+    return errorResponseWithCode(
+      'This linking code has reached its maximum uses. Please ask your parent for a new code.',
+      JOIN_ERROR_CODES.EXPIRED_CODE
+    );
+  }
+
   // Check if user can join (with tier-based limits)
   const currentMembers = family.members || [];
   const joinCheck = canUserJoinFamilyWithTier(user, family, currentMembers.length);
@@ -144,11 +187,20 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
     );
   }
 
-  // Add user to family and update member count
+  // Add user to family, update member count, and increment code usage
   const updatedMembers = [...currentMembers, user.id];
+  const usedBy = family.linking_code_used_by || [];
+  usedBy.push({
+    user_id: user.id,
+    name: user.full_name || user.email || 'Family Member',
+    joined_at: new Date().toISOString(),
+  });
+
   await base44.asServiceRole.entities.Family.update(family.id, {
     members: updatedMembers,
     member_count: updatedMembers.length,
+    linking_code_use_count: (family.linking_code_use_count || 0) + 1,
+    linking_code_used_by: usedBy,
   });
 
   // Create a Person record so the joining user appears in the family member list

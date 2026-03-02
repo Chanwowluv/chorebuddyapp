@@ -8,6 +8,7 @@ import {
   sanitizeCode,
   isValidRole,
   canUserJoinFamilyWithTier,
+  checkRateLimit,
   errorResponse,
   errorResponseWithCode,
   successResponse,
@@ -196,6 +197,16 @@ Deno.serve(async (req) => {
     if (parseError) return parseError;
 
     const { inviteCode, role = 'child' } = body;
+
+    // Rate limit: max 5 join attempts per hour to prevent brute-force
+    const joinRateLimit = checkRateLimit(user.id, 'join_family', 5, 60 * 60 * 1000);
+    if (!joinRateLimit.allowed) {
+      return errorResponseWithCode(
+        'Too many join attempts. Please wait before trying again.',
+        JOIN_ERROR_CODES.INVALID_CODE,
+        429
+      );
+    }
 
     // Validate invite code
     const { valid, code: sanitizedCode, error: codeError } = sanitizeCode(inviteCode);

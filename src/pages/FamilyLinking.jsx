@@ -16,7 +16,8 @@ import {
     ArrowRight,
     Clock,
     Shield,
-    CheckCircle2
+    CheckCircle2,
+    Share2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { familyLinking } from '@/functions/familyLinking';
@@ -287,12 +288,41 @@ export default function FamilyLinking() {
                                                     </>
                                                 )}
                                             </Button>
+                                            {typeof navigator !== 'undefined' && navigator.share && (
+                                                <Button
+                                                    onClick={async () => {
+                                                        try {
+                                                            await navigator.share({
+                                                                title: 'Join my family on ChoreBuddy',
+                                                                text: `Use code ${linkingCode} to join our family on ChoreBuddy!`,
+                                                                url: 'https://chorebuddyapp.com/FamilyLinking',
+                                                            });
+                                                        } catch (err) {
+                                                            if (err.name !== 'AbortError') {
+                                                                toast.error('Failed to share');
+                                                            }
+                                                        }
+                                                    }}
+                                                    variant="outline"
+                                                    className="funky-button border-2 border-[#2B59C3]"
+                                                >
+                                                    <Share2 className="w-4 h-4 mr-2" />
+                                                    Share
+                                                </Button>
+                                            )}
                                         </div>
 
                                         {codeExpiry && (
                                             <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                                                 <Clock className="w-4 h-4" />
                                                 <span>Expires in {formatExpiry(codeExpiry)}</span>
+                                            </div>
+                                        )}
+
+                                        {family && (family.linking_code_max_uses || family.linking_code_use_count >= 0) && (
+                                            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-1">
+                                                <Users className="w-4 h-4" />
+                                                <span>{(family.linking_code_max_uses || 5) - (family.linking_code_use_count || 0)} of {family.linking_code_max_uses || 5} uses remaining</span>
                                             </div>
                                         )}
                                     </>

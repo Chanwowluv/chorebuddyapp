@@ -28,7 +28,7 @@ import { stripHTMLTags } from '@/components/lib/sanitization';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Chores() {
-  const { chores, people, user, loading, isProcessing, addChore, updateChore, deleteChore, createAssignment, fetchData } = useData();
+  const { chores, people, user, family, loading, isProcessing, addChore, updateChore, deleteChore, createAssignment, fetchData } = useData();
   const { hasReachedLimit, canAccess, getTierDisplayName, getRequiredTier, features } = useSubscriptionAccess();
   const isParent = checkParent(user);
   const [showForm, setShowForm] = useState(false);
@@ -49,6 +49,7 @@ export default function Chores() {
     category: "other",
     priority: "medium",
     is_recurring: false,
+    pool_eligible: false,
     recurrence_pattern: undefined,
     recurrence_day: undefined,
     recurrence_date: undefined,
@@ -85,6 +86,7 @@ export default function Chores() {
       estimated_time: chore.estimated_time || "",
       priority: chore.priority || "medium",
       is_recurring: chore.is_recurring || false,
+      pool_eligible: chore.pool_eligible || false,
       auto_assign: chore.auto_assign !== false,
       recurrence_pattern: chore.recurrence_pattern || undefined,
       recurrence_day: chore.recurrence_day || undefined,
@@ -497,6 +499,21 @@ export default function Chores() {
                 🤖 Let ChoreAI assign this chore automatically
               </Label>
             </div>
+
+            {/* Chore Pool toggle - only show when self-assignment is enabled */}
+            {family?.settings?.allow_self_assignment && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="pool_eligible"
+                  checked={formData.pool_eligible}
+                  onCheckedChange={(checked) => setFormData({ ...formData, pool_eligible: checked })}
+                  className="border-2 border-[#5E3B85]"
+                />
+                <Label htmlFor="pool_eligible" className="body-font text-base text-[#5E3B85]">
+                  🙋 Available in Chore Pool (children can self-assign)
+                </Label>
+              </div>
+            )}
 
             {/* Premium Features */}
             {canAccess('advanced_chore_settings') ? (

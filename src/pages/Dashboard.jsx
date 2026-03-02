@@ -14,13 +14,14 @@ import Confetti from "../components/ui/Confetti";
 import ParentDashboard from "../components/dashboard/ParentDashboard";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import ChoresSection from "../components/dashboard/ChoresSection";
+import ChorePool from "../components/chores/ChorePool";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
 import { Loader2 } from "lucide-react";
 import { isParent as checkParent, isChild as checkChild } from '@/utils/roles';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Dashboard() {
-  const { assignments, chores, people, user, loading, fetchData, createAssignment, updateChore } = useData();
+  const { assignments, chores, people, user, family, loading, fetchData, createAssignment, updateChore } = useData();
   const { canAccess, getRequiredTier, getTierDisplayName } = useSubscriptionAccess();
   const { completeChore, completedChoreIdWithConfetti, pointsEarned } = useChoreManagement();
 
@@ -237,6 +238,10 @@ export default function Dashboard() {
           completeChore={completeChore}
           user={user}
           isParent={isParent} />
+
+        {family?.settings?.allow_self_assignment && (
+          <ChorePool />
+        )}
       </div>
     </div>
     </ErrorBoundaryWithRetry>

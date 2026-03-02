@@ -11,6 +11,7 @@ import { ThemeProvider } from './components/contexts/ThemeContext';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import OnboardingTour from './components/onboarding/OnboardingTour';
 import UserAvatar from './components/profile/UserAvatar';
+import NotificationBell from './components/notifications/NotificationBell';
 import { isParent as checkParent } from '@/utils/roles';
 import { PUBLIC_PAGES } from '@/constants/publicPages';
 
@@ -263,10 +264,11 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
               {currentUser?.data?.avatar && (
                 <div className="flex items-center gap-3 px-4 py-2 bg-white/50 rounded-lg">
                   <UserAvatar avatarId={currentUser.data.avatar} size="md" />
-                  <div>
+                  <div className="flex-1">
                     <p className="body-font text-sm text-[#5E3B85]">{currentUser.full_name}</p>
                     <p className="text-xs text-gray-500">{{ free: 'Free', premium: 'Premium', family_plus: 'Family Plus', enterprise: 'Enterprise' }[currentUser.subscription_tier] || 'Free'}</p>
                   </div>
+                  <NotificationBell />
                 </div>
               )}
             </div>
@@ -325,9 +327,10 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
             <div className="funky-button w-14 h-14 bg-[#C3B1E1] flex items-center justify-center">
               <Sparkles className="w-7 h-7 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl header-font text-[#2B59C3]">ChoreBuddy App</h1>
             </div>
+            <NotificationBell />
           </div>
           {children}
         </div>

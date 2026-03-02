@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listForFamily } from '@/utils/entityHelpers';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
-import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap } from 'lucide-react';
+import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap, ArrowRight, Share2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -68,6 +68,7 @@ export default function Account() {
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
+  const [showCodeHistory, setShowCodeHistory] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isJoiningFamily, setIsJoiningFamily] = useState(false);
   const { currentTheme, updateTheme } = useTheme();
@@ -702,12 +703,41 @@ export default function Account() {
                            </>
                          )}
                        </Button>
+                       {typeof navigator !== 'undefined' && navigator.share && (
+                         <Button
+                           onClick={async () => {
+                             try {
+                               await navigator.share({
+                                 title: 'Join my family on ChoreBuddy',
+                                 text: `Use code ${linkingCode} to join our family on ChoreBuddy!`,
+                                 url: 'https://chorebuddyapp.com/FamilyLinking',
+                               });
+                             } catch (err) {
+                               if (err.name !== 'AbortError') {
+                                 toast.error('Failed to share');
+                               }
+                             }
+                           }}
+                           variant="outline"
+                           className="funky-button border-2 border-[#2B59C3]"
+                         >
+                           <Share2 className="w-4 h-4 mr-2" />
+                           Share
+                         </Button>
+                       )}
                      </div>
 
                      {codeExpiry && (
                        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                          <Clock className="w-4 h-4" />
                          <span>Expires in {formatExpiry(codeExpiry)}</span>
+                       </div>
+                     )}
+
+                     {family && (family.linking_code_max_uses || family.linking_code_use_count >= 0) && (
+                       <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mt-1">
+                         <Users className="w-4 h-4" />
+                         <span>{(family.linking_code_max_uses || 5) - (family.linking_code_use_count || 0)} of {family.linking_code_max_uses || 5} uses remaining</span>
                        </div>
                      )}
                    </>
@@ -735,6 +765,39 @@ export default function Account() {
                    Codes expire after 48 hours for security. Generate a new one any time you need to invite more family members.
                  </p>
                </div>
+
+               {/* Code History */}
+               {family?.linking_code_history?.length > 0 && (
+                 <div className="mt-6">
+                   <button
+                     onClick={() => setShowCodeHistory(!showCodeHistory)}
+                     className="flex items-center gap-2 body-font text-sm text-[#5E3B85] hover:text-[#2B59C3] transition-colors"
+                   >
+                     <Clock className="w-4 h-4" />
+                     Code History ({family.linking_code_history.length})
+                     <ArrowRight className={`w-4 h-4 transition-transform ${showCodeHistory ? 'rotate-90' : ''}`} />
+                   </button>
+                   {showCodeHistory && (
+                     <div className="mt-3 space-y-2">
+                       {family.linking_code_history.slice().reverse().map((entry, i) => (
+                         <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
+                           <div className="flex items-center gap-3">
+                             <span className="header-font text-base tracking-wider text-gray-400">{entry.code}</span>
+                             <span className={`px-2 py-0.5 rounded-full text-xs body-font ${
+                               entry.status === 'expired' ? 'bg-red-100 text-red-700' : 'bg-gray-200 text-gray-600'
+                             }`}>
+                               {entry.status}
+                             </span>
+                           </div>
+                           <span className="body-font-light text-xs text-gray-500">
+                             {entry.use_count || 0} uses
+                           </span>
+                         </div>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+               )}
 
                {/* Upgrade CTA for free-tier parents */}
                {(family?.subscription_tier || 'free') === 'free' && (
