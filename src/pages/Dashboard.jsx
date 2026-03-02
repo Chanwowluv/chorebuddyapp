@@ -157,7 +157,7 @@ export default function Dashboard() {
           isOpen={isUpgradeModalOpen}
           onClose={() => setUpgradeModalOpen(false)}
           featureName="ChoreAI Smart Assignment"
-          requiredTier={getTierDisplayName(getRequiredTier('choreai_smart_assignment'))}
+          requiredPlan={getTierDisplayName(getRequiredTier('choreai_smart_assignment'))}
         />
 
         {showPreview && (
@@ -185,7 +185,7 @@ export default function Dashboard() {
             chore={reassignData.chore}
             currentPerson={reassignData.currentPerson}
             people={people}
-            isProcessing={false}
+            isProcessing={isAssigning}
           />
         )}
 
