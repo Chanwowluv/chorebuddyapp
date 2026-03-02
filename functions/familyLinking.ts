@@ -16,11 +16,13 @@ import {
   canUserJoinFamilyWithTier,
   checkRateLimit,
   errorResponse,
+  errorResponseWithCode,
   successResponse,
   forbiddenResponse,
   logError,
   logInfo,
   parseRequestBody,
+  JOIN_ERROR_CODES,
 } from './lib/shared-utils.ts';
 
 /**
@@ -81,7 +83,10 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
   // Validate and sanitize code
   const { valid, code: sanitizedCode, error } = sanitizeCode(linkingCode);
   if (!valid) {
-    return errorResponse(error);
+    return errorResponseWithCode(
+      error || 'Invalid code format',
+      JOIN_ERROR_CODES.INVALID_CODE
+    );
   }
 
   // Find family with this linking code
@@ -90,7 +95,11 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
   });
 
   if (families.length === 0) {
-    return errorResponse('Invalid linking code. Please check and try again.');
+    return errorResponseWithCode(
+      'Invalid linking code. Please check and try again.',
+      JOIN_ERROR_CODES.INVALID_CODE,
+      404
+    );
   }
 
   const family = families[0];
@@ -99,8 +108,9 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
   if (family.linking_code_expires) {
     const expiryDate = new Date(family.linking_code_expires);
     if (expiryDate < new Date()) {
-      return errorResponse(
-        'This linking code has expired. Please ask your parent for a new code.'
+      return errorResponseWithCode(
+        'This linking code has expired. Please ask your parent for a new code.',
+        JOIN_ERROR_CODES.EXPIRED_CODE
       );
     }
   }
@@ -110,12 +120,27 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
   const joinCheck = canUserJoinFamilyWithTier(user, family, currentMembers.length);
 
   if (!joinCheck.allowed) {
-    return errorResponse(joinCheck.message, joinCheck.reason === 'already_in_family' ? 409 : 400);
+    const reasonToCode: Record<string, string> = {
+      already_member: JOIN_ERROR_CODES.ALREADY_MEMBER,
+      already_in_family: JOIN_ERROR_CODES.ALREADY_IN_FAMILY,
+      family_full: JOIN_ERROR_CODES.FAMILY_FULL,
+      tier_limit_reached: JOIN_ERROR_CODES.TIER_LIMIT,
+    };
+    const errorCode = reasonToCode[joinCheck.reason] || JOIN_ERROR_CODES.JOIN_FAILED;
+    const statusCode =
+      joinCheck.reason === 'already_in_family' || joinCheck.reason === 'already_member'
+        ? 409
+        : 400;
+    return errorResponseWithCode(joinCheck.message, errorCode, statusCode);
   }
 
   // Prevent duplicate member entries
   if (currentMembers.includes(user.id)) {
-    return errorResponse('You are already a member of this family', 409);
+    return errorResponseWithCode(
+      'You are already a member of this family',
+      JOIN_ERROR_CODES.ALREADY_MEMBER,
+      409
+    );
   }
 
   // Add user to family and update member count
@@ -169,7 +194,11 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
     } catch (rollbackError) {
       logError('familyLinking', rollbackError, { context: 'rollback_failed' });
     }
-    return errorResponse('Failed to create your profile in the family. Please try again.', 500);
+    return errorResponseWithCode(
+      'Failed to create your profile in the family. Please try again.',
+      JOIN_ERROR_CODES.JOIN_FAILED,
+      500
+    );
   }
 
   logInfo('familyLinking', 'User joined family via linking code', {
@@ -307,6 +336,10 @@ Deno.serve(async (req) => {
     }
   } catch (error) {
     logError('familyLinking', error);
-    return errorResponse('An internal server error occurred', 500);
+    return errorResponseWithCode(
+      'An internal server error occurred',
+      JOIN_ERROR_CODES.SERVER_ERROR,
+      500
+    );
   }
 });

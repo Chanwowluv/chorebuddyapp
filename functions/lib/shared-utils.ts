@@ -30,6 +30,20 @@ export const APP = {
 export const VALID_ROLES = ['parent', 'teen', 'child', 'toddler'];
 export const PARENT_ROLES = ['parent'];
 
+export const JOIN_ERROR_CODES = {
+  INVALID_CODE: 'INVALID_CODE',
+  EXPIRED_CODE: 'EXPIRED_CODE',
+  INVALID_ROLE: 'INVALID_ROLE',
+  ALREADY_MEMBER: 'ALREADY_MEMBER',
+  ALREADY_IN_FAMILY: 'ALREADY_IN_FAMILY',
+  FAMILY_FULL: 'FAMILY_FULL',
+  TIER_LIMIT: 'TIER_LIMIT',
+  INVALID_FAMILY: 'INVALID_FAMILY',
+  JOIN_FAILED: 'JOIN_FAILED',
+  AUTH_REQUIRED: 'AUTH_REQUIRED',
+  SERVER_ERROR: 'SERVER_ERROR',
+} as const;
+
 export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
   PREMIUM: 'premium',
@@ -232,6 +246,21 @@ export async function updateEntityWithEnv(
  */
 export function errorResponse(message: string, status = 400): Response {
   return Response.json({ error: message }, { status, headers: HEADERS });
+}
+
+/**
+ * Error response with machine-readable error code
+ */
+export function errorResponseWithCode(
+  message: string,
+  code: string,
+  status = 400,
+  details?: Record<string, any>
+): Response {
+  return Response.json(
+    { error: message, errorCode: code, ...details },
+    { status, headers: HEADERS }
+  );
 }
 
 /**

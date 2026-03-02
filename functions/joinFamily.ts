@@ -7,13 +7,15 @@ import {
   requireAuth,
   sanitizeCode,
   isValidRole,
-  canUserJoinFamily,
+  canUserJoinFamilyWithTier,
   errorResponse,
+  errorResponseWithCode,
   successResponse,
   logError,
   logInfo,
   parseRequestBody,
   VALID_ROLES,
+  JOIN_ERROR_CODES,
 } from './lib/shared-utils.ts';
 
 /**
@@ -26,17 +28,22 @@ function mapRoleToPerson(userRole: string): string {
 
 /**
  * Check for existing person record
+ * Returns { person, error } to distinguish "not found" from "lookup failed"
  */
-async function findExistingPerson(base44: any, familyId: string, userId: string) {
+async function findExistingPerson(
+  base44: any,
+  familyId: string,
+  userId: string
+): Promise<{ person: any | null; error?: string }> {
   try {
     const persons = await base44.asServiceRole.entities.Person.filter({
       family_id: familyId,
       linked_user_id: userId,
     });
-    return persons.length > 0 ? persons[0] : null;
+    return { person: persons.length > 0 ? persons[0] : null };
   } catch (error) {
     logError('joinFamily', error, { context: 'findExistingPerson' });
-    return null;
+    return { person: null, error: 'Failed to check existing membership' };
   }
 }
 
@@ -87,9 +94,10 @@ async function performJoinOperation(
     const currentMembers = family.members || [];
 
     if (!currentMembers.includes(user.id)) {
+      const updatedMembers = [...currentMembers, user.id];
       await base44.asServiceRole.entities.Family.update(family.id, {
-        members: [...currentMembers, user.id],
-        member_count: currentMembers.length + 1,
+        members: updatedMembers,
+        member_count: updatedMembers.length,
       });
     }
     operationSteps.push('family_updated');
@@ -119,10 +127,10 @@ async function performJoinOperation(
  */
 async function rollbackJoinOperation(
   base44: any,
-  personId: string,
+  personId: string | null,
   userId: string,
   familyId: string,
-  originalFamilyId: string
+  originalFamilyId: string | null | undefined
 ) {
   const rollbackErrors: string[] = [];
 
@@ -192,12 +200,18 @@ Deno.serve(async (req) => {
     // Validate invite code
     const { valid, code: sanitizedCode, error: codeError } = sanitizeCode(inviteCode);
     if (!valid) {
-      return errorResponse(codeError);
+      return errorResponseWithCode(
+        codeError || 'Invalid invite code format',
+        JOIN_ERROR_CODES.INVALID_CODE
+      );
     }
 
     // Validate role
     if (!isValidRole(role)) {
-      return errorResponse(`Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`);
+      return errorResponseWithCode(
+        `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`,
+        JOIN_ERROR_CODES.INVALID_ROLE
+      );
     }
 
     // Find family with this invite code
@@ -208,22 +222,38 @@ Deno.serve(async (req) => {
       });
     } catch (error) {
       logError('joinFamily', error, { context: 'fetch_family' });
-      return errorResponse('Failed to validate invite code. Please try again.', 500);
+      return errorResponseWithCode(
+        'Failed to validate invite code. Please try again.',
+        JOIN_ERROR_CODES.SERVER_ERROR,
+        500
+      );
     }
 
     if (!families || families.length === 0) {
-      return errorResponse('Invalid or expired invite code', 404);
+      return errorResponseWithCode(
+        'Invalid or expired invite code',
+        JOIN_ERROR_CODES.INVALID_CODE,
+        404
+      );
     }
 
     const family = families[0];
 
     // Validate family data
     if (!family.id || !family.name) {
-      return errorResponse('Invalid family data', 500);
+      return errorResponseWithCode('Invalid family data', JOIN_ERROR_CODES.INVALID_FAMILY, 500);
     }
 
     // Check for existing membership
-    const existingPerson = await findExistingPerson(base44, family.id, user.id);
+    const { person: existingPerson, error: lookupError } = await findExistingPerson(
+      base44,
+      family.id,
+      user.id
+    );
+
+    if (lookupError) {
+      return errorResponseWithCode(lookupError, JOIN_ERROR_CODES.SERVER_ERROR, 500);
+    }
 
     if (existingPerson) {
       logInfo('joinFamily', 'User already member of family', {
@@ -241,20 +271,30 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate user can join
+    // Validate user can join (with tier-based limits)
     const currentFamilySize = family.members?.length || 0;
-    const joinCheck = canUserJoinFamily(user, family, currentFamilySize);
+    const joinCheck = canUserJoinFamilyWithTier(user, family, currentFamilySize);
 
     if (!joinCheck.allowed) {
-      const statusCode = joinCheck.reason === 'already_in_family' ? 409 : 400;
-      return errorResponse(joinCheck.message, statusCode);
+      const reasonToCode: Record<string, string> = {
+        already_member: JOIN_ERROR_CODES.ALREADY_MEMBER,
+        already_in_family: JOIN_ERROR_CODES.ALREADY_IN_FAMILY,
+        family_full: JOIN_ERROR_CODES.FAMILY_FULL,
+        tier_limit_reached: JOIN_ERROR_CODES.TIER_LIMIT,
+      };
+      const errorCode = reasonToCode[joinCheck.reason] || JOIN_ERROR_CODES.JOIN_FAILED;
+      const statusCode =
+        joinCheck.reason === 'already_in_family' || joinCheck.reason === 'already_member'
+          ? 409
+          : 400;
+      return errorResponseWithCode(joinCheck.message, errorCode, statusCode);
     }
 
     // Perform atomic join operation
     const joinResult = await performJoinOperation(base44, user, family, role);
 
     if (!joinResult.success) {
-      return errorResponse(joinResult.error, 500);
+      return errorResponseWithCode(joinResult.error, JOIN_ERROR_CODES.JOIN_FAILED, 500);
     }
 
     logInfo('joinFamily', 'User successfully joined family', {
@@ -274,18 +314,18 @@ Deno.serve(async (req) => {
   } catch (error) {
     logError('joinFamily', error, { context: 'main_handler' });
 
-    // Determine appropriate error response
-    let statusCode = 500;
-    let errorMessage = 'An internal server error occurred.';
-
     if (error.message?.includes('not authenticated')) {
-      statusCode = 401;
-      errorMessage = 'Authentication required';
-    } else if (error.message?.includes('Invalid')) {
-      statusCode = 400;
-      errorMessage = error.message;
+      return errorResponseWithCode(
+        'Authentication required',
+        JOIN_ERROR_CODES.AUTH_REQUIRED,
+        401
+      );
     }
 
-    return errorResponse(errorMessage, statusCode);
+    return errorResponseWithCode(
+      'An internal server error occurred.',
+      JOIN_ERROR_CODES.SERVER_ERROR,
+      500
+    );
   }
 });

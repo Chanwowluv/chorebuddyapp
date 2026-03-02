@@ -23,6 +23,26 @@ import { familyLinking } from '@/functions/familyLinking';
 import { isParent as checkParent } from '@/utils/roles';
 import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
 
+// Error code to user-friendly message mapping for join errors
+const LINKING_ERROR_MESSAGES = {
+    INVALID_CODE: 'Invalid linking code. Please double-check and try again.',
+    EXPIRED_CODE: 'This code has expired. Ask your parent for a new code.',
+    ALREADY_MEMBER: 'You are already a member of this family!',
+    ALREADY_IN_FAMILY: 'You are already in another family.',
+    FAMILY_FULL: 'This family is full and cannot accept more members.',
+    TIER_LIMIT: "This family has reached its plan's member limit. The family owner needs to upgrade.",
+    JOIN_FAILED: 'Failed to join family. Please try again.',
+    SERVER_ERROR: 'Something went wrong. Please try again later.',
+};
+
+function getLinkingErrorMessage(result) {
+    const errorCode = result?.data?.errorCode || result?.errorCode;
+    if (errorCode && LINKING_ERROR_MESSAGES[errorCode]) {
+        return LINKING_ERROR_MESSAGES[errorCode];
+    }
+    return result?.error || result?.data?.error || 'Failed to join family';
+}
+
 export default function FamilyLinking() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
@@ -128,7 +148,7 @@ export default function FamilyLinking() {
             });
 
             if (result.error || result.data?.error) {
-                toast.error(result.error || result.data?.error || 'Failed to join family');
+                toast.error(getLinkingErrorMessage(result));
                 return;
             }
 
@@ -146,7 +166,7 @@ export default function FamilyLinking() {
             }
         } catch (error) {
             console.error('Error joining family:', error);
-            toast.error(error.response?.data?.error || 'Failed to join family. Please check your code.');
+            toast.error(getLinkingErrorMessage(error) || 'Failed to join family. Please check your code.');
         } finally {
             setIsJoining(false);
         }

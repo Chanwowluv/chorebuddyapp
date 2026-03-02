@@ -24,6 +24,26 @@ import AccessibilitySettings from '@/components/profile/AccessibilitySettings';
 import { isParent as checkParent, isChild } from '@/utils/roles';
 import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
 
+// Error code to user-friendly message mapping for join errors
+const JOIN_ERROR_MESSAGES = {
+  INVALID_CODE: 'Invalid linking code. Please double-check and try again.',
+  EXPIRED_CODE: 'This code has expired. Ask your parent for a new code.',
+  ALREADY_MEMBER: 'You are already a member of this family!',
+  ALREADY_IN_FAMILY: 'You are already in another family.',
+  FAMILY_FULL: 'This family is full and cannot accept more members.',
+  TIER_LIMIT: "This family has reached its plan's member limit. The family owner needs to upgrade.",
+  JOIN_FAILED: 'Failed to join family. Please try again.',
+  SERVER_ERROR: 'Something went wrong. Please try again later.',
+};
+
+function getJoinErrorMessage(result) {
+  const errorCode = result?.data?.errorCode || result?.errorCode;
+  if (errorCode && JOIN_ERROR_MESSAGES[errorCode]) {
+    return JOIN_ERROR_MESSAGES[errorCode];
+  }
+  return result?.error || result?.data?.error || 'Failed to join family';
+}
+
 export default function Account() {
   const [user, setUser] = useState(null);
   const [linkedPerson, setLinkedPerson] = useState(null);
@@ -281,7 +301,7 @@ export default function Account() {
         linkingCode: joinCode.trim(),
       });
       if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to join family');
+        toast.error(getJoinErrorMessage(result));
         return;
       }
       if (result.data?.success) {
@@ -293,7 +313,7 @@ export default function Account() {
       }
     } catch (error) {
       console.error('Error joining family:', error);
-      toast.error('Failed to join family. Please check your code.');
+      toast.error(getJoinErrorMessage(error) || 'Failed to join family. Please check your code.');
     } finally {
       setIsJoiningFamily(false);
     }
