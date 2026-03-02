@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { format, startOfWeek } from 'date-fns';
+import { useChoreManagement } from '../hooks/useChoreManagement';
 import { useData } from '../contexts/DataContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LayoutDashboard, TrendingUp, Gift, Calendar } from 'lucide-react';
@@ -12,7 +14,16 @@ import DashboardEmptyState from './DashboardEmptyState';
 
 export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
   const { people = [], chores = [], assignments = [], user, loading } = useData();
+  const { completeChore } = useChoreManagement();
   const [activeTab, setActiveTab] = useState('overview');
+
+  const currentWeekAssignments = useMemo(() => {
+    const currentWeek = format(startOfWeek(new Date()), 'yyyy-MM-dd');
+    return assignments.filter((a) => a.week_start === currentWeek);
+  }, [assignments]);
+
+  const pendingAssignments = currentWeekAssignments.filter((a) => !a.completed);
+  const completedAssignments = currentWeekAssignments.filter((a) => a.completed);
 
   const hasData = people.length > 0 || chores.length > 0;
 
@@ -91,7 +102,15 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
         </TabsContent>
 
         <TabsContent value="chores">
-          <ChoresSection />
+          <ChoresSection
+            pendingAssignments={pendingAssignments}
+            completedAssignments={completedAssignments}
+            chores={chores}
+            people={people}
+            completeChore={completeChore}
+            user={user}
+            isParent={true}
+          />
         </TabsContent>
 
         <TabsContent value="analytics">
