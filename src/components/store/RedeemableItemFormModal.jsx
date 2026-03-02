@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, X } from 'lucide-react';
 import { REWARD_ICON_NAMES, REWARD_ICONS } from '@/components/lib/constants';
+import { validateName, validateNumber } from '@/components/utils/validation';
+import { stripHTMLTags } from '@/components/lib/sanitization';
+import { toast } from 'sonner';
 
 export default function RedeemableItemFormModal({ 
   isOpen, 
@@ -45,10 +48,23 @@ export default function RedeemableItemFormModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.cost) return;
+
+    const nameValidation = validateName(formData.name);
+    if (!nameValidation.valid) {
+      toast.error(nameValidation.error);
+      return;
+    }
+
+    const costValidation = validateNumber(parseInt(formData.cost), 1, 10000, 'Cost');
+    if (!costValidation.valid) {
+      toast.error(costValidation.error);
+      return;
+    }
 
     const itemData = {
       ...formData,
+      name: stripHTMLTags(formData.name),
+      description: stripHTMLTags(formData.description),
       cost: parseInt(formData.cost)
     };
 

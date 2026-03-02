@@ -25,6 +25,7 @@ export default function PersonFormModal({
     name: "",
     avatar_color: "lavender",
     role: "parent",
+    date_of_birth: "",
     preferred_categories: [],
     avoided_categories: [],
     max_weekly_chores: 5,
@@ -38,6 +39,7 @@ export default function PersonFormModal({
     if (isEditMode) {
       setPerson({
         ...personToEdit,
+        date_of_birth: personToEdit.date_of_birth || "",
         preferred_categories: personToEdit.preferred_categories || [],
         avoided_categories: personToEdit.avoided_categories || [],
         max_weekly_chores: personToEdit.max_weekly_chores || 5,
@@ -48,6 +50,7 @@ export default function PersonFormModal({
         name: "",
         avatar_color: "lavender",
         role: "parent",
+        date_of_birth: "",
         preferred_categories: [],
         avoided_categories: [],
         max_weekly_chores: 5,
@@ -152,6 +155,21 @@ export default function PersonFormModal({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Date of Birth (optional) */}
+              <div>
+                <label className="body-font text-lg text-[#5E3B85] mb-2 block">Date of Birth</label>
+                <Input
+                  type="date"
+                  value={person.date_of_birth}
+                  onChange={(e) => setPerson({ ...person, date_of_birth: e.target.value })}
+                  className="funky-button border-3 border-[#5E3B85] body-font bg-white max-w-xs"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+                <p className="body-font-light text-xs text-gray-500 mt-1">
+                  Optional — helps ChoreAI suggest age-appropriate chores
+                </p>
               </div>
 
               {/* ChoreAI Preferences - Only for premium users */}

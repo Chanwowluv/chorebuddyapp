@@ -3,8 +3,6 @@ import { smartAssignChores } from "@/functions/smartAssignChores";
 import { format, startOfWeek } from "date-fns";
 import { useData } from '../components/contexts/DataContext';
 import { toast } from "sonner";
-import { Assignment } from "@/entities/Assignment";
-import { Chore } from "@/entities/Chore";
 
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import { useChoreManagement } from '../components/hooks/useChoreManagement';
@@ -19,9 +17,10 @@ import ChoresSection from "../components/dashboard/ChoresSection";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
 import { Loader2 } from "lucide-react";
 import { isParent as checkParent, isChild as checkChild } from '@/utils/roles';
+import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Dashboard() {
-  const { assignments, chores, people, user, loading, fetchData } = useData();
+  const { assignments, chores, people, user, loading, fetchData, createAssignment, updateChore } = useData();
   const { canAccess, getRequiredTier, getTierDisplayName } = useSubscriptionAccess();
   const { completeChore, completedChoreIdWithConfetti, pointsEarned } = useChoreManagement();
 
@@ -78,7 +77,7 @@ export default function Dashboard() {
     setIsAssigning(true);
     try {
       await Promise.all(
-        assignments.map(a => Assignment.create(a))
+        assignments.map(a => createAssignment(a))
       );
 
       const rotationUpdates = assignments
@@ -91,8 +90,8 @@ export default function Dashboard() {
 
       if (rotationUpdates.length > 0) {
         await Promise.all(
-          rotationUpdates.map(update => 
-            Chore.update(update.id, {
+          rotationUpdates.map(update =>
+            updateChore(update.id, {
               rotation_current_index: update.rotation_current_index,
               rotation_last_assigned_date: update.rotation_last_assigned_date
             })
@@ -145,6 +144,7 @@ export default function Dashboard() {
   // Show ParentDashboard for parents
   if (isParent) {
     return (
+      <ErrorBoundaryWithRetry level="page">
       <div className="min-h-screen relative">
         <PointsEarnedNotification
           points={pointsEarned.amount}
@@ -191,16 +191,18 @@ export default function Dashboard() {
 
         {completedChoreIdWithConfetti && <Confetti />}
         
-        <ParentDashboard 
+        <ParentDashboard
           assignChoresForWeek={assignChoresForWeek}
           isAssigning={isAssigning}
         />
       </div>
+      </ErrorBoundaryWithRetry>
     );
   }
 
   // Child/Teen Dashboard
   return (
+    <ErrorBoundaryWithRetry level="page">
     <div className="min-h-screen relative">
       <PointsEarnedNotification
         points={pointsEarned.amount}
@@ -237,5 +239,6 @@ export default function Dashboard() {
           isParent={isParent} />
       </div>
     </div>
+    </ErrorBoundaryWithRetry>
   );
 }

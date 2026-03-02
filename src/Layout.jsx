@@ -387,7 +387,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
           <div className="border-t-2 border-dashed border-gray-300 mt-8 pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="body-font-light text-sm text-gray-600">
-                © 2025 ChoreBuddy App. All rights reserved.
+                © {new Date().getFullYear()} ChoreBuddy App. All rights reserved.
               </p>
               <div className="flex items-center gap-4 body-font-light text-sm text-gray-600">
                 <span>Version 1.0.0</span>
@@ -414,6 +414,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
                 <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${item.color}`}>
                   <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
+                <span className="text-[10px] body-font text-[#5E3B85] leading-tight">{item.title}</span>
               </Link>
             );
           })}
@@ -428,6 +429,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
                 <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${item.color}`}>
                   <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
+                <span className="text-[10px] body-font text-[#5E3B85] leading-tight">{item.title}</span>
               </Link>
             );
           })}
@@ -438,6 +440,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
             <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-gray-200 text-gray-700`}>
               <Settings className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
+            <span className="text-[10px] body-font text-[#5E3B85] leading-tight">Settings</span>
           </Link>
           <Link
             to={createPageUrl("Pricing")}
@@ -446,6 +449,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
             <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-green-400 text-green-800`}>
               <Zap className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
+            <span className="text-[10px] body-font text-[#5E3B85] leading-tight">Upgrade</span>
           </Link>
         </div>
       </div>
@@ -463,9 +467,9 @@ export default function LayoutWrapper(props) {
           <AppLayout {...props} showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding} />
           <RealTimeBadge />
           <CookieBanner />
-          <OnboardingTour 
-            isOpen={showOnboarding} 
-            onClose={() => setShowOnboarding(true)} 
+          <OnboardingTour
+            isOpen={showOnboarding}
+            onClose={() => setShowOnboarding(false)}
           />
         </DataProvider>
       </ThemeProvider>
