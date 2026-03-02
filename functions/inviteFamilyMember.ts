@@ -35,7 +35,7 @@ async function handleGenerateLinkingCode(
   const family = await base44.asServiceRole.entities.Family.get(familyId);
 
   const linkingCode = generateCode(8);
-  const linkingCodeExpires = calculateExpiryDate(24);
+  const linkingCodeExpires = calculateExpiryDate();
 
   const userLinkingCodes = family.user_linking_codes || {};
 

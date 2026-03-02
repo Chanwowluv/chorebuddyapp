@@ -23,6 +23,7 @@ import {
   logInfo,
   parseRequestBody,
   JOIN_ERROR_CODES,
+  APP,
 } from './lib/shared-utils.ts';
 
 /**
@@ -54,7 +55,7 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
 
   // Generate new code
   const newCode = generateCode(6);
-  const expiresAt = calculateExpiryDate(24); // 24 hours
+  const expiresAt = calculateExpiryDate(); // uses CODE_EXPIRY_HOURS (48h)
 
   // Update family
   await updateEntityWithEnv(
@@ -150,11 +151,6 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
     member_count: updatedMembers.length,
   });
 
-  // Update user's family_id
-  await base44.auth.updateMe({
-    family_id: family.id,
-  });
-
   // Create a Person record so the joining user appears in the family member list
   let personId: string | null = null;
   try {
@@ -183,14 +179,13 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
       familyId: family.id,
     });
   } catch (personError) {
-    // Rollback: restore family members and clear user's family_id
+    // Rollback: restore family members (auth.updateMe not yet called, so no user rollback needed)
     logError('familyLinking', personError, { context: 'person_creation_rollback' });
     try {
       await base44.asServiceRole.entities.Family.update(family.id, {
         members: currentMembers,
         member_count: currentMembers.length,
       });
-      await base44.auth.updateMe({ family_id: null });
     } catch (rollbackError) {
       logError('familyLinking', rollbackError, { context: 'rollback_failed' });
     }
@@ -201,11 +196,73 @@ async function handleJoinFamily(base44: any, user: any, linkingCode: string) {
     );
   }
 
+  // Update user's family_id and linked_person_id after Person record exists
+  try {
+    await base44.auth.updateMe({
+      family_id: family.id,
+      linked_person_id: personId,
+    });
+  } catch (updateError) {
+    // Rollback: delete Person record and restore family members
+    logError('familyLinking', updateError, { context: 'user_update_rollback' });
+    try {
+      if (personId) {
+        await base44.asServiceRole.entities.Person.delete(personId);
+      }
+      await base44.asServiceRole.entities.Family.update(family.id, {
+        members: currentMembers,
+        member_count: currentMembers.length,
+      });
+    } catch (rollbackError) {
+      logError('familyLinking', rollbackError, { context: 'rollback_failed' });
+    }
+    return errorResponseWithCode(
+      'Failed to complete family join. Please try again.',
+      JOIN_ERROR_CODES.JOIN_FAILED,
+      500
+    );
+  }
+
   logInfo('familyLinking', 'User joined family via linking code', {
     userId: user.id,
     familyId: family.id,
     personId,
   });
+
+  // Notify parent(s) that a new member joined
+  try {
+    const familyPeople = await base44.asServiceRole.entities.Person.filter({
+      family_id: family.id,
+      role: 'parent',
+    });
+
+    const joinerName = user.full_name || user.email || 'A new member';
+    const joinerRole = user.family_role || 'child';
+
+    for (const parentPerson of familyPeople) {
+      if (parentPerson.linked_user_id && parentPerson.linked_user_id !== user.id) {
+        try {
+          const parentUser = await base44.asServiceRole.entities.User.get(parentPerson.linked_user_id);
+          if (parentUser?.email) {
+            await base44.asServiceRole.integrations.Core.SendEmail({
+              to: parentUser.email,
+              subject: `${APP.NAME}: ${joinerName} has joined your family!`,
+              body: `<h2>New Family Member!</h2>
+                     <p><strong>${joinerName}</strong> has joined <strong>${family.name}</strong> as a <strong>${joinerRole}</strong> using your linking code.</p>
+                     <p>They can now be assigned chores and start earning rewards!</p>
+                     <p><a href="${APP.URL}/People">View Family Members</a></p>`,
+              from_name: APP.NAME,
+            });
+          }
+        } catch (emailError) {
+          logError('familyLinking', emailError, { context: 'parent_notification_email' });
+        }
+      }
+    }
+  } catch (notifyError) {
+    // Non-critical: join succeeded, notification is best-effort
+    logError('familyLinking', notifyError, { context: 'parent_notification' });
+  }
 
   return successResponse({
     familyName: family.name,
