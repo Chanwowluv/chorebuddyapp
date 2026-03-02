@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, ClipboardList, Clock, Star, Edit, Trash2, UserPlus, CheckSquare, Sparkles } from "lucide-react";
-import { Assignment } from "@/entities/Assignment";
 import { CHORE_CATEGORY_COLORS, DIFFICULTY_STARS } from '@/components/lib/constants';
 import { toast } from "sonner";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
@@ -24,9 +23,12 @@ import EnhancedAssignmentModal from "../components/chores/EnhancedAssignmentModa
 import BulkAssignmentModal from "../components/chores/BulkAssignmentModal";
 import AISuggestionsModal from "../components/ai/AISuggestionsModal";
 import { isParent as checkParent } from '@/utils/roles';
+import { validateName, validateDescription, validateNumber } from '@/components/utils/validation';
+import { stripHTMLTags } from '@/components/lib/sanitization';
+import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Chores() {
-  const { chores, people, user, loading, isProcessing, addChore, updateChore, deleteChore, fetchData } = useData();
+  const { chores, people, user, loading, isProcessing, addChore, updateChore, deleteChore, createAssignment, fetchData } = useData();
   const { hasReachedLimit, canAccess, getTierDisplayName, getRequiredTier, features } = useSubscriptionAccess();
   const isParent = checkParent(user);
   const [showForm, setShowForm] = useState(false);
@@ -113,7 +115,35 @@ export default function Chores() {
       toast.error("Only parents can manage chores");
       return;
     }
-    if (!formData.title.trim()) return;
+    const titleValidation = validateName(formData.title);
+    if (!titleValidation.valid) {
+      toast.error(titleValidation.error);
+      return;
+    }
+
+    if (formData.description) {
+      const descValidation = validateDescription(formData.description);
+      if (!descValidation.valid) {
+        toast.error(descValidation.error);
+        return;
+      }
+    }
+
+    if (formData.estimated_time) {
+      const timeValidation = validateNumber(parseInt(formData.estimated_time), 1, 480, 'Estimated time');
+      if (!timeValidation.valid) {
+        toast.error(timeValidation.error);
+        return;
+      }
+    }
+
+    if (formData.custom_points) {
+      const pointsValidation = validateNumber(parseInt(formData.custom_points), 1, 1000, 'Custom points');
+      if (!pointsValidation.valid) {
+        toast.error(pointsValidation.error);
+        return;
+      }
+    }
 
     if (formData.is_template && !formData.template_name.trim()) {
       toast.error("Please provide a name for your template");
@@ -122,6 +152,8 @@ export default function Chores() {
 
     const choreData = {
       ...formData,
+      title: stripHTMLTags(formData.title),
+      description: stripHTMLTags(formData.description),
       estimated_time: formData.estimated_time ? parseInt(formData.estimated_time) : null,
       custom_points: formData.custom_points ? parseInt(formData.custom_points) : null,
       priority_weight: formData.priority === 'high' ? 8 : formData.priority === 'medium' ? 5 : 2
@@ -171,7 +203,7 @@ export default function Chores() {
           ...a,
           family_id: user.family_id
         };
-        return Assignment.create(assignmentData);
+        return createAssignment(assignmentData);
       }));
       toast.success(`Successfully created ${assignments.length} assignment${assignments.length > 1 ? 's' : ''}!`);
       setAssignModalOpen(false);
@@ -206,8 +238,8 @@ export default function Chores() {
         }
       }
 
-      // Create all assignments
-      await Promise.all(assignments.map(a => Assignment.create(a)));
+      // Create all assignments via server-validated parentCrud
+      await Promise.all(assignments.map(a => createAssignment(a)));
       
       toast.success(`Successfully assigned ${assignments.length} chores!`);
       setBulkAssignModalOpen(false);
@@ -254,6 +286,7 @@ export default function Chores() {
   }
 
   return (
+    <ErrorBoundaryWithRetry level="page">
     <div className="mx-4 md:mx-8 lg:mx-24 pb-32 space-y-6 md:space-y-8 lg:pb-8">
       <ConfirmDialog
         isOpen={!!choreToDelete}
@@ -711,5 +744,6 @@ export default function Chores() {
         </div>
       )}
     </div>
+    </ErrorBoundaryWithRetry>
   );
 }

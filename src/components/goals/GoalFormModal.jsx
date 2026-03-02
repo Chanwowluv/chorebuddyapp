@@ -6,6 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
 import { format, addWeeks, addMonths } from 'date-fns';
+import { validateName, validateNumber, validateDescription } from '@/components/utils/validation';
+import { stripHTMLTags } from '@/components/lib/sanitization';
+import { toast } from 'sonner';
 
 export default function GoalFormModal({ 
   isOpen, 
@@ -48,10 +51,37 @@ export default function GoalFormModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.target_points || !formData.reward_description.trim()) return;
+
+    const titleValidation = validateName(formData.title);
+    if (!titleValidation.valid) {
+      toast.error(titleValidation.error);
+      return;
+    }
+
+    if (formData.description) {
+      const descValidation = validateDescription(formData.description);
+      if (!descValidation.valid) {
+        toast.error(descValidation.error);
+        return;
+      }
+    }
+
+    const pointsValidation = validateNumber(parseInt(formData.target_points), 1, 100000, 'Target points');
+    if (!pointsValidation.valid) {
+      toast.error(pointsValidation.error);
+      return;
+    }
+
+    if (!formData.reward_description.trim()) {
+      toast.error('Reward description is required');
+      return;
+    }
 
     const goalData = {
       ...formData,
+      title: stripHTMLTags(formData.title),
+      description: stripHTMLTags(formData.description),
+      reward_description: stripHTMLTags(formData.reward_description),
       target_points: parseInt(formData.target_points),
       start_date: format(new Date(), 'yyyy-MM-dd')
     };

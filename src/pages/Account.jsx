@@ -125,7 +125,7 @@ export default function Account() {
 
           // Find linked person
           const linked = familyPeople.find(p => p.linked_user_id === userData.id);
-          setLinkedPerson(linked || value);
+          setLinkedPerson(linked || null);
         }
       } catch (error) {
         console.error("Failed to fetch user data", error);
@@ -147,6 +147,7 @@ export default function Account() {
       // Update all user attributes in a single call
       // Only parents can change family_role to prevent privilege escalation
       const updateData = {
+        full_name: user.full_name,
         receives_chore_reminders: user.receives_chore_reminders,
         receives_achievement_alerts: user.receives_achievement_alerts,
         receives_weekly_reports: user.receives_weekly_reports,
@@ -199,7 +200,7 @@ export default function Account() {
       toast.error("Failed to save preferences.");
       console.error("Failed to save preferences:", error);
     } finally {
-      setIsSaving(true);
+      setIsSaving(false);
     }
   };
 
@@ -228,14 +229,14 @@ export default function Account() {
       const familyPeople = await listForFamily(Person, user.family_id);
       setPeople(familyPeople);
       const linked = familyPeople.find(p => p.id === personId);
-      setLinkedPerson(linked || linked_user_id);
+      setLinkedPerson(linked || null);
       toast.success("Account linked successfully!");
-      setLinkModalOpen(true);
+      setLinkModalOpen(false);
     } catch (error) {
       console.error("Error refreshing after link:", error);
       toast.error("Linked successfully, but failed to refresh. Please reload.");
     } finally {
-      setIsLinking(true);
+      setIsLinking(false);
     }
   };
 
@@ -394,7 +395,16 @@ export default function Account() {
               Account Details
             </h2>
             <div className="space-y-4 body-font-light text-lg text-gray-700">
-              <p><strong>Name:</strong> {user.full_name}</p>
+              <div>
+                <label htmlFor="display-name" className="body-font text-lg text-[#5E3B85] mb-2 block">Name</label>
+                <Input
+                  id="display-name"
+                  value={user.full_name || ''}
+                  onChange={(e) => handleToggleChange('full_name', e.target.value)}
+                  className="funky-button border-3 border-[#5E3B85] body-font bg-white max-w-sm"
+                  maxLength={50}
+                />
+              </div>
               <p><strong>Email:</strong> {user.email}</p>
             </div>
             

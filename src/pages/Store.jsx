@@ -12,6 +12,7 @@ import RedeemConfirmationModal from "../components/store/RedeemConfirmationModal
 import { format, startOfWeek } from "date-fns";
 import AISuggestionsModal from "../components/ai/AISuggestionsModal";
 import { isParent as checkParent } from '@/utils/roles';
+import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Store() {
   const { items, rewards, people, user, loading, isProcessing, addItem, updateItem, deleteItem, addReward } = useData();
@@ -29,15 +30,15 @@ export default function Store() {
   const [itemToRedeem, setItemToRedeem] = useState(null); // New state for item to redeem
   const [isAISuggestionsOpen, setAISuggestionsOpen] = useState(false);
 
-  // Calculate points for each person
+  // Use person.points_balance for accurate lifetime balance
+  // (previously calculated from rewards filtered to 60-day window, losing older points)
   const personPoints = useMemo(() => {
     const points = {};
     people.forEach(person => {
-      const personRewards = rewards.filter(r => r.person_id === person.id);
-      points[person.id] = personRewards.reduce((sum, reward) => sum + (reward.points || 0), 0);
+      points[person.id] = person.points_balance || 0;
     });
     return points;
-  }, [people, rewards]);
+  }, [people]);
 
   const handleShowAddForm = () => {
     if (hasReachedLimit('max_redeemable_items')) {
@@ -146,6 +147,7 @@ export default function Store() {
   }
 
   return (
+    <ErrorBoundaryWithRetry level="page">
     <div className="mx-4 md:mx-8 lg:mx-20 pb-32 space-y-6 md:space-y-8 lg:pb-8">
       <LimitReachedModal
         isOpen={isLimitModalOpen}
@@ -285,5 +287,6 @@ export default function Store() {
         </div>
       )}
     </div>
+    </ErrorBoundaryWithRetry>
   );
 }

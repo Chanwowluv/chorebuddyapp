@@ -650,7 +650,23 @@ export const DataProvider = ({ children }) => {
       });
       
       console.log("[DataContext] Reward created:", newReward.id);
-      
+
+      // Update person's points_balance for accurate lifetime tracking
+      if (data.person_id && data.points) {
+        try {
+          const person = people.find(p => p.id === data.person_id);
+          if (person) {
+            const newBalance = (person.points_balance || 0) + data.points;
+            await base44.entities.Person.update(data.person_id, {
+              points_balance: newBalance,
+              updated_at: new Date().toISOString()
+            });
+          }
+        } catch (error) {
+          console.error("[DataContext] Failed to update person points_balance:", error);
+        }
+      }
+
       // Update family statistics
       if (family && data.points !== 0) {
         try {
@@ -669,7 +685,7 @@ export const DataProvider = ({ children }) => {
       
       return newReward;
     }, data.points > 0 ? "Points awarded!" : "Points deducted")
-  , [wrapProcessing, ensureFamily, family]);
+  , [wrapProcessing, ensureFamily, family, people]);
 
   const deleteReward = useCallback((id) => 
     wrapProcessing(
