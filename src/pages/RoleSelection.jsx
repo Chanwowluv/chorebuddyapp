@@ -135,13 +135,13 @@ export default function RoleSelection() {
         {/* Role Cards */}
         <div className="grid md:grid-cols-3 gap-6">
           {/* Parent Card */}
-          <button
+          <button>
             onClick={() => handleRoleSelect('parent')}
             disabled={selecting}
             className={`funky-card-hover funky-card p-8 text-center transition-all ${
               selectedRole === 'parent' ? 'scale-105 border-[#2B59C3] bg-blue-50' : ''
             } ${selecting ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-          >
+          
             <div className="funky-button w-20 h-20 mx-auto mb-4 bg-[#2B59C3] flex items-center justify-center">
               <Users className="w-10 h-10 text-white" />
             </div>
