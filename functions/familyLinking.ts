@@ -272,27 +272,21 @@ async function handleGenerateCode(base44: any, user: any, familyId: string) {
     return errorResponse('You can only generate codes for your own family', 403);
   }
 
-  // Get family with environment detection
-  const { family, env } = await getFamily(base44, familyId);
+  // Get family
+  const { family } = await getFamily(base44, familyId);
   if (!family) {
     return errorResponse('Family not found', 404);
   }
 
-  // Generate new code
-  const newCode = generateCode(6);
+  // Generate new code (must be 8 chars for Family.json schema)
+  const newCode = generateCode(8);
   const expiresAt = calculateExpiryDate(); // uses CODE_EXPIRY_HOURS (48h)
 
   // Update family
-  await updateEntityWithEnv(
-    base44,
-    'Family',
-    familyId,
-    {
-      linking_code: newCode,
-      linking_code_expires: expiresAt,
-    },
-    env
-  );
+  await base44.asServiceRole.entities.Family.update(familyId, {
+    linking_code: newCode,
+    linking_code_expires: expiresAt,
+  });
 
   logInfo('familyLinking', 'Generated new linking code', { familyId, userId: user.id });
 
