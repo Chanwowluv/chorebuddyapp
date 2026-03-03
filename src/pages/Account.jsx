@@ -137,7 +137,7 @@ export default function Account() {
   }, []);
 
   const handleToggleChange = (field, value) => {
-    setUser(prev => prev ? { ...prev, [field]: value } : value);
+    setUser(prev => prev ? { ...prev, [field]: value } : null);
   };
 
   const handleSaveChanges = async () => {
