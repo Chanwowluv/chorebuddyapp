@@ -164,8 +164,12 @@ async function getFamily(
   base44,
   familyId
 ) {
-  const { entity, env } = await findEntityAcrossEnvs(base44, 'Family', familyId);
-  return { family: entity, env };
+  try {
+    const family = await base44.asServiceRole.entities.Family.get(familyId);
+    return { family };
+  } catch (error) {
+    return { family: null };
+  }
 }
 
 function canUserJoinFamily(
