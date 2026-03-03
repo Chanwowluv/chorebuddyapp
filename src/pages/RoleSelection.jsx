@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, Baby, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { familyLinking } from '@/functions/familyLinking';
+import { stripeCheckout } from '@/functions/stripeCheckout';
 
 export default function RoleSelection() {
   const navigate = useNavigate();
@@ -78,7 +79,9 @@ export default function RoleSelection() {
         // Admin privileges are derived from family_role: 'parent'
         await User.updateMyUserData({
           family_id: family.id,
-          family_role: role
+          family_role: role,
+          subscription_tier: 'free',
+          subscription_status: 'active'
         });
 
         // Auto-generate a linking code so parents always have one ready
@@ -91,8 +94,18 @@ export default function RoleSelection() {
       } else {
         // Teen/Child - just set role, they'll join family via linking code
         await User.updateMyUserData({
-          family_role: role
+          family_role: role,
+          subscription_tier: 'free',
+          subscription_status: 'active'
         });
+      }
+
+      // Auto-create Stripe customer so stripe_customer_id is available from day one
+      try {
+        await stripeCheckout({ endpoint: 'create-customer' });
+      } catch (e) {
+        // Non-critical: user can still use the app; customer created on checkout if needed
+        console.error('Failed to create Stripe customer at signup:', e);
       }
 
       toast.success(`Welcome! You're set up as a ${role}.`);
