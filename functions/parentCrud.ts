@@ -4,17 +4,82 @@
 // before delegating to base44.asServiceRole.entities.
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import {
-  requireParent,
-  getUserFamilyId,
-  parseRequestBody,
-  errorResponse,
-  successResponse,
-  forbiddenResponse,
-  logError,
-  logInfo,
-  HEADERS,
-} from './lib/shared-utils.ts';
+
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': 'https://chorebuddyapp.com',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function errorResponse(message, status = 400) {
+  return Response.json({ error: message }, { status, headers: HEADERS });
+}
+
+function successResponse(data, status = 200) {
+  return Response.json({ success: true, ...data }, { status, headers: HEADERS });
+}
+
+function unauthorizedResponse(message = 'Unauthorized') {
+  return errorResponse(message, 401);
+}
+
+function forbiddenResponse(message = 'Forbidden') {
+  return errorResponse(message, 403);
+}
+
+function isParent(user) {
+  return user?.family_role === 'parent' || user?.data?.family_role === 'parent' || user?.role === 'admin';
+}
+
+function getUserFamilyId(user) {
+  return user?.family_id || user?.data?.family_id || null;
+}
+
+async function requireAuth(base44) {
+  try {
+    const user = await base44.auth.me();
+    if (!user || !user.id) {
+      return { user: null, error: unauthorizedResponse('User not authenticated') };
+    }
+    return { user };
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return { user: null, error: unauthorizedResponse('Authentication failed') };
+  }
+}
+
+async function requireParent(base44) {
+  const { user, error } = await requireAuth(base44);
+  if (error) return { user: null, error };
+
+  if (!isParent(user)) {
+    return { user: null, error: forbiddenResponse('Only parents can perform this action') };
+  }
+
+  return { user };
+}
+
+async function parseRequestBody(req) {
+  try {
+    const data = await req.json();
+    return { data };
+  } catch {
+    return { data: null, error: errorResponse('Invalid JSON in request body') };
+  }
+}
+
+function logError(context, error, metadata) {
+  console.error(`[ERROR] ${context}:`, {
+    message: error.message,
+    stack: error.stack,
+    ...metadata,
+  });
+}
+
+function logInfo(context, message, metadata) {
+  console.log(`[INFO] ${context}:`, message, metadata || '');
+}
 
 // Whitelist of entity+operation combinations allowed through this endpoint.
 // Only parent-only operations are listed here. Operations that children need
