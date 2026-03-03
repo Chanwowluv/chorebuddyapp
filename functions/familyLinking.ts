@@ -523,16 +523,44 @@ async function handleUnlinkAccount(base44: any, user: any, personId: string) {
     return errorResponse('Cannot unlink the family owner');
   }
 
-  // Clear linked_user_id
-  await base44.asServiceRole.entities.Person.update(personId, {
-    linked_user_id: null,
-    updated_at: new Date().toISOString(),
-  });
+  // Capture the user ID before clearing the link
+  const unlinkedUserId = person.linked_user_id;
+
+  // Clear the Person → User link
+  try {
+    await base44.asServiceRole.entities.Person.update(personId, {
+      linked_user_id: null,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (unlinkError) {
+    logError('familyLinking', unlinkError, {
+      context: 'handleUnlinkAccount_unlink_operation',
+      userId: user.id,
+      personId,
+    });
+    return errorResponse('Failed to unlink account. Please try again.', 500);
+  }
+
+  // Clear the User → Person link on the unlinked user
+  if (unlinkedUserId) {
+    try {
+      await base44.asServiceRole.entities.User.update(unlinkedUserId, {
+        linked_person_id: null,
+      });
+    } catch (userUpdateError) {
+      // Non-critical: Person already unlinked, user cleanup is best-effort
+      logError('familyLinking', userUpdateError, {
+        context: 'clear_linked_person_id',
+        unlinkedUserId,
+        personId,
+      });
+    }
+  }
 
   logInfo('familyLinking', 'Account unlinked from person', {
     userId: user.id,
     personId,
-    unlinkedUserId: person.linked_user_id,
+    unlinkedUserId,
   });
 
   return successResponse({ personId });
