@@ -117,34 +117,7 @@ function checkRateLimit(
   return { allowed: true };
 }
 
-async function findEntityAcrossEnvs(
-  base44,
-  entityName,
-  id
-) {
-  try {
-    const entity = await base44.asServiceRole.entities[entityName].get(id);
-    return { entity, env: 'prod' };
-  } catch {
-    try {
-      const entity = await base44.asServiceRole.entities[entityName].get(id, { data_env: 'dev' });
-      return { entity, env: 'dev' };
-    } catch {
-      return { entity: null, env: 'prod' };
-    }
-  }
-}
-
-async function updateEntityWithEnv(
-  base44,
-  entityName,
-  id,
-  data,
-  env
-) {
-  const options = env === 'dev' ? { data_env: 'dev' } : {};
-  return await base44.asServiceRole.entities[entityName].update(id, data, options);
-}
+// Removed findEntityAcrossEnvs and updateEntityWithEnv as SDK handles env automatically
 
 function errorResponse(message, status = 400) {
   return Response.json({ error: message }, { status, headers: HEADERS });
