@@ -66,6 +66,30 @@ const handleCreateCheckoutSession = async (payload, user, base44, origin) => {
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 };
 
+const handleCreateCustomer = async (user, base44) => {
+    if (user.stripe_customer_id) {
+        return new Response(
+            JSON.stringify({ stripe_customer_id: user.stripe_customer_id }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
+    const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.full_name,
+        metadata: { base44_user_id: user.id }
+    });
+
+    await base44.asServiceRole.entities.User.update(user.id, {
+        stripe_customer_id: customer.id
+    });
+
+    return new Response(
+        JSON.stringify({ stripe_customer_id: customer.id }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+};
+
 const handleCreatePortalSession = async (user, base44, origin) => {
     if (!user.stripe_customer_id) {
         return new Response(JSON.stringify({ error: "No customer ID found" }), { status: 400 });
@@ -208,6 +232,8 @@ Deno.serve(async (req) => {
         const origin = req.headers.get('origin');
 
         switch (endpoint) {
+            case 'create-customer':
+                return handleCreateCustomer(user, base44);
             case 'create-checkout-session':
                 return handleCreateCheckoutSession(payload, user, base44, origin);
             case 'create-portal-session':
