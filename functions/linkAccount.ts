@@ -5,17 +5,21 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import {
   requireAuth,
-  requireParent,
   getUserFamilyId,
   getFamily,
   validateFamilyAccess,
   validateLinkingCode,
   sanitizeCode,
-  errorResponse,
+  isParent,
+  isExpired,
+  checkRateLimit,
+  errorResponseWithCode,
   successResponse,
   logError,
   logInfo,
   parseRequestBody,
+  HEADERS,
+  LINK_ERROR_CODES,
 } from './lib/shared-utils.ts';
 
 /**
@@ -24,7 +28,17 @@ import {
  */
 async function handleParentLink(base44: any, user: any, personId: string) {
   if (!personId) {
-    return errorResponse('Person ID is required');
+    return errorResponseWithCode('Person ID is required', LINK_ERROR_CODES.LINK_FAILED);
+  }
+
+  // Rate limit
+  const rateLimit = checkRateLimit(user.id, 'link_parent', 10, 5 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return errorResponseWithCode(
+      'Too many linking attempts. Please try again later.',
+      LINK_ERROR_CODES.RATE_LIMITED,
+      429
+    );
   }
 
   // Get person record
@@ -32,18 +46,21 @@ async function handleParentLink(base44: any, user: any, personId: string) {
   try {
     person = await base44.asServiceRole.entities.Person.get(personId);
   } catch {
-    return errorResponse('Person not found or not accessible', 404);
+    return errorResponseWithCode('Person not found or not accessible', LINK_ERROR_CODES.PERSON_NOT_FOUND, 404);
   }
 
   // Verify user is in the same family
   const familyCheck = validateFamilyAccess(user, person.family_id);
   if (!familyCheck.valid) {
-    return errorResponse(familyCheck.error, 403);
+    return errorResponseWithCode(familyCheck.error, LINK_ERROR_CODES.ACCESS_DENIED, 403);
   }
 
   // Check if person is already linked to another user
   if (person.linked_user_id && person.linked_user_id !== user.id) {
-    return errorResponse('This family member is already linked to another account');
+    return errorResponseWithCode(
+      'This family member is already linked to another account',
+      LINK_ERROR_CODES.ALREADY_LINKED
+    );
   }
 
   // Check if user is already linked to another person
@@ -53,13 +70,45 @@ async function handleParentLink(base44: any, user: any, personId: string) {
   });
 
   if (existingLink.length > 0 && existingLink[0].id !== personId) {
-    return errorResponse('Your account is already linked to another family member');
+    return errorResponseWithCode(
+      'Your account is already linked to another family member',
+      LINK_ERROR_CODES.USER_ALREADY_LINKED
+    );
   }
 
   // Link the user to the person
-  await base44.asServiceRole.entities.Person.update(personId, {
-    linked_user_id: user.id,
-  });
+  try {
+    await base44.asServiceRole.entities.Person.update(personId, {
+      linked_user_id: user.id,
+      updated_at: new Date().toISOString(),
+    });
+
+    await base44.auth.updateMe({
+      linked_person_id: personId,
+    });
+  } catch (linkError) {
+    logError('linkAccount', linkError, {
+      context: 'handleParentLink_link_operation',
+      userId: user.id,
+      personId,
+    });
+
+    // Attempt to revert Person record
+    try {
+      await base44.asServiceRole.entities.Person.update(personId, {
+        linked_user_id: person.linked_user_id || null,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (rollbackError) {
+      logError('linkAccount', rollbackError, { context: 'rollback_failed' });
+    }
+
+    return errorResponseWithCode(
+      'Failed to complete account linking. Please try again.',
+      LINK_ERROR_CODES.LINK_FAILED,
+      500
+    );
+  }
 
   logInfo('linkAccount', 'Parent linked account to person', {
     userId: user.id,
@@ -69,6 +118,7 @@ async function handleParentLink(base44: any, user: any, personId: string) {
   return successResponse({
     message: 'Successfully linked your account!',
     personId,
+    personName: person.name,
   });
 }
 
@@ -80,19 +130,32 @@ async function handleCodeLink(base44: any, user: any, linkingCode: string) {
   // Validate user has a family
   const familyId = getUserFamilyId(user);
   if (!familyId) {
-    return errorResponse('You must be part of a family to link accounts');
+    return errorResponseWithCode(
+      'You must be part of a family to link accounts',
+      LINK_ERROR_CODES.NO_FAMILY
+    );
+  }
+
+  // Rate limit
+  const rateLimit = checkRateLimit(user.id, 'link_code', 10, 5 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return errorResponseWithCode(
+      'Too many code attempts. Please try again later.',
+      LINK_ERROR_CODES.RATE_LIMITED,
+      429
+    );
   }
 
   // Validate code format
   const { valid, code: sanitizedCode, error } = sanitizeCode(linkingCode);
   if (!valid) {
-    return errorResponse(error);
+    return errorResponseWithCode(error, LINK_ERROR_CODES.INVALID_CODE);
   }
 
   // Get family
   const { family } = await getFamily(base44, familyId);
   if (!family) {
-    return errorResponse('Family not found', 404);
+    return errorResponseWithCode('Family not found', LINK_ERROR_CODES.FAMILY_NOT_FOUND, 404);
   }
 
   // Validate linking code - check user-specific codes first, then family-wide code
@@ -103,10 +166,10 @@ async function handleCodeLink(base44: any, user: any, linkingCode: string) {
       family.linking_code &&
       family.linking_code.toUpperCase() === sanitizedCode &&
       family.linking_code_expires &&
-      new Date(family.linking_code_expires) > new Date();
+      !isExpired(family.linking_code_expires);
 
     if (!familyCodeValid) {
-      return errorResponse(codeValidation.error);
+      return errorResponseWithCode(codeValidation.error, LINK_ERROR_CODES.INVALID_CODE);
     }
   }
 
@@ -118,7 +181,10 @@ async function handleCodeLink(base44: any, user: any, linkingCode: string) {
   const unlinkedPeople = allPeople.filter((p) => !p.linked_user_id);
 
   if (unlinkedPeople.length === 0) {
-    return errorResponse('No available family member profiles to link');
+    return errorResponseWithCode(
+      'No available family member profiles to link',
+      LINK_ERROR_CODES.NO_UNLINKED_PEOPLE
+    );
   }
 
   // Check if user is already linked to a person
@@ -155,14 +221,38 @@ async function handleCodeLink(base44: any, user: any, linkingCode: string) {
   }
 
   // Link the user to the person
-  await base44.asServiceRole.entities.Person.update(personToLink.id, {
-    linked_user_id: user.id,
-  });
+  try {
+    await base44.asServiceRole.entities.Person.update(personToLink.id, {
+      linked_user_id: user.id,
+      updated_at: new Date().toISOString(),
+    });
 
-  // Update user's linked_person_id for easy reference
-  await base44.auth.updateMe({
-    linked_person_id: personToLink.id,
-  });
+    await base44.auth.updateMe({
+      linked_person_id: personToLink.id,
+    });
+  } catch (linkError) {
+    logError('linkAccount', linkError, {
+      context: 'handleCodeLink_link_operation',
+      userId: user.id,
+      personId: personToLink.id,
+    });
+
+    // Attempt to revert Person record
+    try {
+      await base44.asServiceRole.entities.Person.update(personToLink.id, {
+        linked_user_id: null,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (rollbackError) {
+      logError('linkAccount', rollbackError, { context: 'rollback_failed' });
+    }
+
+    return errorResponseWithCode(
+      'Failed to complete account linking. Please try again.',
+      LINK_ERROR_CODES.LINK_FAILED,
+      500
+    );
+  }
 
   logInfo('linkAccount', 'User linked account with code', {
     userId: user.id,
@@ -183,7 +273,17 @@ async function handleCodeLink(base44: any, user: any, linkingCode: string) {
 async function handleManualSelection(base44: any, user: any, personId: string) {
   const familyId = getUserFamilyId(user);
   if (!familyId) {
-    return errorResponse('You must be part of a family');
+    return errorResponseWithCode('You must be part of a family', LINK_ERROR_CODES.NO_FAMILY);
+  }
+
+  // Rate limit
+  const rateLimit = checkRateLimit(user.id, 'link_select', 10, 5 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return errorResponseWithCode(
+      'Too many selection attempts. Please try again later.',
+      LINK_ERROR_CODES.RATE_LIMITED,
+      429
+    );
   }
 
   // Get person and verify they're unlinked
@@ -191,17 +291,21 @@ async function handleManualSelection(base44: any, user: any, personId: string) {
   try {
     person = await base44.asServiceRole.entities.Person.get(personId);
   } catch {
-    return errorResponse('Person not found', 404);
+    return errorResponseWithCode('Person not found', LINK_ERROR_CODES.PERSON_NOT_FOUND, 404);
   }
 
   // Verify same family
-  if (person.family_id !== familyId) {
-    return errorResponse('Person is not in your family', 403);
+  const familyCheck = validateFamilyAccess(user, person.family_id);
+  if (!familyCheck.valid) {
+    return errorResponseWithCode(familyCheck.error, LINK_ERROR_CODES.ACCESS_DENIED, 403);
   }
 
   // Check if person is already linked
   if (person.linked_user_id) {
-    return errorResponse('This family member is already linked to another account');
+    return errorResponseWithCode(
+      'This family member is already linked to another account',
+      LINK_ERROR_CODES.ALREADY_LINKED
+    );
   }
 
   // Check if user is already linked
@@ -211,17 +315,45 @@ async function handleManualSelection(base44: any, user: any, personId: string) {
   });
 
   if (existingLink.length > 0) {
-    return errorResponse('Your account is already linked to another family member');
+    return errorResponseWithCode(
+      'Your account is already linked to another family member',
+      LINK_ERROR_CODES.USER_ALREADY_LINKED
+    );
   }
 
   // Link the user to the person
-  await base44.asServiceRole.entities.Person.update(personId, {
-    linked_user_id: user.id,
-  });
+  try {
+    await base44.asServiceRole.entities.Person.update(personId, {
+      linked_user_id: user.id,
+      updated_at: new Date().toISOString(),
+    });
 
-  await base44.auth.updateMe({
-    linked_person_id: personId,
-  });
+    await base44.auth.updateMe({
+      linked_person_id: personId,
+    });
+  } catch (linkError) {
+    logError('linkAccount', linkError, {
+      context: 'handleManualSelection_link_operation',
+      userId: user.id,
+      personId,
+    });
+
+    // Attempt to revert Person record
+    try {
+      await base44.asServiceRole.entities.Person.update(personId, {
+        linked_user_id: null,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (rollbackError) {
+      logError('linkAccount', rollbackError, { context: 'rollback_failed' });
+    }
+
+    return errorResponseWithCode(
+      'Failed to complete account linking. Please try again.',
+      LINK_ERROR_CODES.LINK_FAILED,
+      500
+    );
+  }
 
   logInfo('linkAccount', 'User completed manual person selection', {
     userId: user.id,
@@ -239,6 +371,11 @@ async function handleManualSelection(base44: any, user: any, personId: string) {
  * Main handler
  */
 Deno.serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: HEADERS });
+  }
+
   const base44 = createClientFromRequest(req);
 
   try {
@@ -256,31 +393,47 @@ Deno.serve(async (req) => {
     switch (method) {
       case 'parent_link':
         // Parent linking their own account to a person
-        const { error: parentError } = await requireParent(base44);
-        if (parentError) return parentError;
+        if (!isParent(user)) {
+          return errorResponseWithCode(
+            'Only parents can perform this action',
+            LINK_ERROR_CODES.PARENT_REQUIRED,
+            403
+          );
+        }
         return await handleParentLink(base44, user, personId);
 
       case 'code_link':
         // User linking with a code
         if (!linkingCode) {
-          return errorResponse('Linking code required for code-based linking');
+          return errorResponseWithCode(
+            'Linking code required for code-based linking',
+            LINK_ERROR_CODES.INVALID_CODE
+          );
         }
         return await handleCodeLink(base44, user, linkingCode);
 
       case 'select_person':
         // User selecting from multiple unlinked people
         if (!personId) {
-          return errorResponse('Person ID required for manual selection');
+          return errorResponseWithCode(
+            'Person ID required for manual selection',
+            LINK_ERROR_CODES.LINK_FAILED
+          );
         }
         return await handleManualSelection(base44, user, personId);
 
       default:
-        return errorResponse(
-          'Invalid method. Use "parent_link", "code_link", or "select_person"'
+        return errorResponseWithCode(
+          'Invalid method. Use "parent_link", "code_link", or "select_person"',
+          LINK_ERROR_CODES.LINK_FAILED
         );
     }
   } catch (error) {
     logError('linkAccount', error);
-    return errorResponse('An internal server error occurred', 500);
+    return errorResponseWithCode(
+      'An internal server error occurred',
+      LINK_ERROR_CODES.SERVER_ERROR,
+      500
+    );
   }
 });
