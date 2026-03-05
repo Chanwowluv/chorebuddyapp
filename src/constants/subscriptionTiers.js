@@ -71,26 +71,7 @@ export const SUBSCRIPTION_FEATURES = {
     early_completion_bonus: true,
     family_invitations: true,
   },
-  enterprise: {
-    max_family_members: 50,
-    max_redeemable_items: -1,
-    max_chores: -1,
-
-    choreai_smart_assignment: true,
-    advanced_chore_settings: true,
-    family_goals: true,
-    analytics_export: true,
-    premium_support: true,
-    recurring_chores: true,
-    chore_approval_system: true,
-    photo_verification: true,
-    custom_points: true,
-    weekly_reports: true,
-    priority_assignment: true,
-    early_completion_bonus: true,
-    family_invitations: true,
-  },
-};
+}
 
 /**
  * Get the max family member limit for a tier.
