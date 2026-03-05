@@ -13,6 +13,7 @@ import { AVATAR_COLORS } from '@/components/lib/constants';
 import { toast } from "sonner";
 import ReassignModal from '../components/chores/ReassignModal';
 import { isParent as checkParent, isChild as checkChild } from '@/utils/roles';
+import PullToRefresh from '../components/ui/PullToRefresh';
 
 export default function Schedule() {
   const { assignments, chores, people, user, loading, updateAssignment, fetchData } = useData();
@@ -84,6 +85,7 @@ export default function Schedule() {
   const isCurrentWeek = format(currentWeek, "yyyy-MM-dd") === format(startOfWeek(new Date()), "yyyy-MM-dd");
 
   return (
+    <PullToRefresh onRefresh={fetchData}>
     <div className="mx-4 md:mx-8 lg:mx-24 pb-32 space-y-6 md:space-y-8 lg:pb-8 relative">
       {completedChoreIdWithConfetti && <Confetti />}
       
@@ -257,5 +259,6 @@ export default function Schedule() {
         </>
       )}
     </div>
+    </PullToRefresh>
   );
 }

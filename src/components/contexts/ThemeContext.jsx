@@ -16,7 +16,28 @@ export const useTheme = () => {
 export function ThemeProvider({ children }) {
   const [currentTheme, setCurrentTheme] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const { isAuthenticated, isLoadingAuth } = useAuth();
+
+  // Detect and apply system dark mode preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const applyColorScheme = (isDark) => {
+      setDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    applyColorScheme(mediaQuery.matches);
+
+    const handler = (e) => applyColorScheme(e.matches);
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
@@ -65,7 +86,7 @@ export function ThemeProvider({ children }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, updateTheme, isLoading }}>
+    <ThemeContext.Provider value={{ currentTheme, updateTheme, isLoading, darkMode }}>
       {children}
     </ThemeContext.Provider>
   );

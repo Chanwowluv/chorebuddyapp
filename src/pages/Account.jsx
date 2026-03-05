@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listForFamily } from '@/utils/entityHelpers';
 import { createPageUrl } from '@/utils';
 import { Link } from 'react-router-dom';
-import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap } from 'lucide-react';
+import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -70,6 +70,7 @@ export default function Account() {
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isJoiningFamily, setIsJoiningFamily] = useState(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const { currentTheme, updateTheme } = useTheme();
 
   // Determine effective subscription tier (child/teen/toddler inherits parent's)
@@ -201,6 +202,16 @@ export default function Account() {
       console.error("Failed to save preferences:", error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await base44.auth.deleteMe();
+      window.location.href = '/';
+    } catch (error) {
+      toast.error("Failed to delete account. Please contact support.");
+      console.error("Error deleting account:", error);
     }
   };
 
@@ -484,6 +495,37 @@ export default function Account() {
                   Log Out
                 </Button>
               </div>
+
+              {/* Danger Zone */}
+              <div className="mt-8 pt-6 border-t-2 border-red-200">
+                <h2 className="header-font text-2xl text-red-600 mb-4 flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6" />
+                  Danger Zone
+                </h2>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border-2 border-red-300 rounded-xl bg-red-50">
+                  <div>
+                    <p className="body-font text-lg text-red-700">Delete Account</p>
+                    <p className="body-font-light text-sm text-red-500">Permanently delete your account and all associated data. This cannot be undone.</p>
+                  </div>
+                  <Button
+                    onClick={() => setShowDeleteAccountConfirm(true)}
+                    className="funky-button bg-red-600 hover:bg-red-700 text-white px-6 py-3 header-font flex-shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Account
+                  </Button>
+                </div>
+              </div>
+
+              <ConfirmDialog
+                isOpen={showDeleteAccountConfirm}
+                onClose={() => setShowDeleteAccountConfirm(false)}
+                onConfirm={handleDeleteAccount}
+                title="Delete Account"
+                message="This will permanently delete your account and all your data, including chore history, achievements, and family connections. This action cannot be undone."
+                confirmText="Delete My Account"
+                variant="destructive"
+              />
           </div>
         </TabsContent>
 

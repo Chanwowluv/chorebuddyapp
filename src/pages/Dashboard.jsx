@@ -18,6 +18,7 @@ import PointsEarnedNotification from "../components/gamification/PointsEarnedNot
 import { Loader2 } from "lucide-react";
 import { isParent as checkParent, isChild as checkChild } from '@/utils/roles';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
+import PullToRefresh from '../components/ui/PullToRefresh';
 
 export default function Dashboard() {
   const { assignments, chores, people, user, loading, fetchData, createAssignment, updateChore } = useData();
@@ -145,6 +146,7 @@ export default function Dashboard() {
   if (isParent) {
     return (
       <ErrorBoundaryWithRetry level="page">
+      <PullToRefresh onRefresh={fetchData}>
       <div className="min-h-screen relative">
         <PointsEarnedNotification
           points={pointsEarned.amount}
@@ -196,6 +198,7 @@ export default function Dashboard() {
           isAssigning={isAssigning}
         />
       </div>
+      </PullToRefresh>
       </ErrorBoundaryWithRetry>
     );
   }
@@ -203,6 +206,7 @@ export default function Dashboard() {
   // Child/Teen Dashboard
   return (
     <ErrorBoundaryWithRetry level="page">
+    <PullToRefresh onRefresh={fetchData}>
     <div className="min-h-screen relative">
       <PointsEarnedNotification
         points={pointsEarned.amount}
@@ -239,6 +243,7 @@ export default function Dashboard() {
           isParent={isParent} />
       </div>
     </div>
+    </PullToRefresh>
     </ErrorBoundaryWithRetry>
   );
 }
