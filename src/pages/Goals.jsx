@@ -159,7 +159,7 @@ export default function Goals() {
   return (
     <FeatureGate
       feature="family_goals"
-      customMessage="Family Goals help your household work together towards shared rewards. Available on Family Plus and Enterprise plans.">
+      customMessage="Family Goals help your household work together towards shared rewards. Available on Family Plus plans.">
 
       <div className="mx-4 md:mx-8 lg:mx-24 pb-32 space-y-8 lg:pb-8">
         <ConfirmDialog
