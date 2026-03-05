@@ -60,7 +60,6 @@ export const useSubscriptionAccess = () => {
     // Convenience getters
     isPremium: currentTier === 'premium' && isActive,
     isFamilyPlus: currentTier === 'family_plus' && isActive,
-    isEnterprise: currentTier === 'enterprise' && isActive,
     isPaidTier,
     isFree: currentTier === 'free'
   };
