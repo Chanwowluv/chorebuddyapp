@@ -124,8 +124,7 @@ export function formatTier(tier) {
   const names = {
     free: 'Free',
     premium: 'Premium',
-    family_plus: 'Family Plus',
-    enterprise: 'Enterprise',
+    family_plus: 'Family Plus'
   };
   return names[tier] || 'Free';
 }
@@ -140,8 +139,7 @@ export function getTierColor(tier) {
   const colors = {
     free: 'gray',
     premium: 'blue',
-    family_plus: 'purple',
-    enterprise: 'yellow',
+    family_plus: 'purple'
   };
   return colors[tier] || 'gray';
 }
