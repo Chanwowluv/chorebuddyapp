@@ -9,10 +9,6 @@ const PLAN_PRICE_IDS = {
   family_plus: {
     monthly: Deno.env.get("STRIPE_PRICE_ID_FAMILY_PLUS_MONTHLY"),
     yearly: Deno.env.get("STRIPE_PRICE_ID_FAMILY_PLUS_YEARLY")
-  },
-  enterprise: {
-    monthly: Deno.env.get("STRIPE_PRICE_ID_ENTERPRISE_MONTHLY"),
-    yearly: Deno.env.get("STRIPE_PRICE_ID_ENTERPRISE_YEARLY")
   }
 };
 

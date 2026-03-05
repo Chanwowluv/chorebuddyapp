@@ -63,19 +63,16 @@ export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
   PREMIUM: 'premium',
   FAMILY_PLUS: 'family_plus',
-  ENTERPRISE: 'enterprise',
 };
 
 // Frontend source of truth for tier limits: src/constants/subscriptionTiers.js
 // Keep this value in sync when updating tier limits.
-export const MAX_FAMILY_SIZE = 50;
+export const MAX_FAMILY_SIZE = 100;
 export const CODE_EXPIRY_HOURS = 48;
 
 export const TIER_MEMBER_LIMITS: Record<string, number> = {
-  free: 6,
-  premium: 15,
-  family_plus: 30,
-  enterprise: 50,
+  free: 2,
+  premium: 4,
 };
 
 // ==========================================
@@ -418,8 +415,9 @@ export function canUserJoinFamilyWithTier(
   if (!baseCheck.allowed) return baseCheck;
 
   const tier = family.subscription_tier || 'free';
-  const tierLimit = TIER_MEMBER_LIMITS[tier] || TIER_MEMBER_LIMITS.free;
-  if (currentSize >= tierLimit) {
+  const tierLimit = TIER_MEMBER_LIMITS[tier];
+  // No entry in TIER_MEMBER_LIMITS means unlimited (e.g. family_plus)
+  if (tierLimit !== undefined && currentSize >= tierLimit) {
     return {
       allowed: false,
       reason: 'tier_limit_reached',
@@ -463,11 +461,11 @@ export function hasFeatureAccess(
   feature: string
 ): { allowed: boolean; requiredTier?: string } {
   const featureMatrix = {
-    email_invitations: [SUBSCRIPTION_TIERS.PREMIUM, SUBSCRIPTION_TIERS.FAMILY_PLUS, SUBSCRIPTION_TIERS.ENTERPRISE],
-    choreai: [SUBSCRIPTION_TIERS.PREMIUM, SUBSCRIPTION_TIERS.FAMILY_PLUS, SUBSCRIPTION_TIERS.ENTERPRISE],
-    reports: [SUBSCRIPTION_TIERS.FAMILY_PLUS, SUBSCRIPTION_TIERS.ENTERPRISE],
-    family_goals: [SUBSCRIPTION_TIERS.FAMILY_PLUS, SUBSCRIPTION_TIERS.ENTERPRISE],
-    premium_support: [SUBSCRIPTION_TIERS.ENTERPRISE],
+    email_invitations: [SUBSCRIPTION_TIERS.PREMIUM, SUBSCRIPTION_TIERS.FAMILY_PLUS],
+    choreai: [SUBSCRIPTION_TIERS.PREMIUM, SUBSCRIPTION_TIERS.FAMILY_PLUS],
+    reports: [SUBSCRIPTION_TIERS.FAMILY_PLUS],
+    family_goals: [SUBSCRIPTION_TIERS.FAMILY_PLUS],
+    premium_support: [SUBSCRIPTION_TIERS.FAMILY_PLUS],
   };
 
   const requiredTiers = featureMatrix[feature];

@@ -15,7 +15,7 @@ export async function validateSubscriptionChange(data, existingData, context) {
   const memberCount = data.member_count || existingData.member_count || 0;
   const newLimit = getMemberLimit(newTier);
 
-  if (memberCount > newLimit) {
+  if (newLimit !== -1 && memberCount > newLimit) {
     throw new Error(
       `Cannot downgrade to ${newTier}: You have ${memberCount} members. ` +
       `${newTier} tier supports up to ${newLimit} members. ` +

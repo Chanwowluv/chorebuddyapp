@@ -45,14 +45,12 @@ const SUBSCRIPTION_TIERS = {
   FAMILY_PLUS: 'family_plus'
 };
 
-const MAX_FAMILY_SIZE = 50;
+const MAX_FAMILY_SIZE = 100;
 const CODE_EXPIRY_HOURS = 48;
 
 const TIER_MEMBER_LIMITS = {
-  free: 6,
-  premium: 15,
-  family_plus: 30,
-  enterprise: 50,
+  free: 2,
+  premium: 4,
 };
 
 function sanitizeCode(code) {
@@ -214,8 +212,9 @@ function canUserJoinFamilyWithTier(
   if (!baseCheck.allowed) return baseCheck;
 
   const tier = family.subscription_tier || 'free';
-  const tierLimit = TIER_MEMBER_LIMITS[tier] || TIER_MEMBER_LIMITS.free;
-  if (currentSize >= tierLimit) {
+  const tierLimit = TIER_MEMBER_LIMITS[tier];
+  // No entry in TIER_MEMBER_LIMITS means unlimited (e.g. family_plus)
+  if (tierLimit !== undefined && currentSize >= tierLimit) {
     return {
       allowed: false,
       reason: 'tier_limit_reached',
