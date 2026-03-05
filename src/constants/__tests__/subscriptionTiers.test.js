@@ -136,7 +136,7 @@ describe('hasReachedMemberLimit', () => {
 
 describe('getRemainingSlots', () => {
   it('should return correct remaining slots', () => {
-    const family = { subscription_tier: 'free', member_count: 4 };
+    const family = { subscription_tier: 'free', member_count: 2 };
     expect(getRemainingSlots(family)).toBe(2);
   });
 
