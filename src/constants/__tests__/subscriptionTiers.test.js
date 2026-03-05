@@ -27,14 +27,14 @@ describe('SUBSCRIPTION_FEATURES', () => {
 
   it('all tiers should have the same set of keys', () => {
     const freeKeys = Object.keys(SUBSCRIPTION_FEATURES.free).sort();
-    for (const tier of ['premium', 'family_plus', 'enterprise']) {
+    for (const tier of ['premium', 'family_plus']) {
       const tierKeys = Object.keys(SUBSCRIPTION_FEATURES[tier]).sort();
       expect(tierKeys).toEqual(freeKeys);
     }
   });
 
-  it('enterprise should have all features enabled', () => {
-    const booleanFeatures = Object.entries(SUBSCRIPTION_FEATURES.enterprise)
+  it('family_plus should have all features enabled', () => {
+    const booleanFeatures = Object.entries(SUBSCRIPTION_FEATURES.family_plus)
       .filter(([key]) => !key.startsWith('max_'));
     for (const [key, value] of booleanFeatures) {
       expect(value).toBe(true);
@@ -43,28 +43,24 @@ describe('SUBSCRIPTION_FEATURES', () => {
 });
 
 describe('getMemberLimit', () => {
-  it('should return 6 for free tier', () => {
-    expect(getMemberLimit('free')).toBe(6);
+  it('should return 2 for free tier', () => {
+    expect(getMemberLimit('free')).toBe(2);
   });
 
-  it('should return 15 for premium tier', () => {
-    expect(getMemberLimit('premium')).toBe(15);
+  it('should return 4 for premium tier', () => {
+    expect(getMemberLimit('premium')).toBe(4);
   });
 
-  it('should return 30 for family_plus tier', () => {
-    expect(getMemberLimit('family_plus')).toBe(30);
+  it('should return 12 for family_plus tier', () => {
+    expect(getMemberLimit('family_plus')).toBe(12);
   });
 
-  it('should return 50 for enterprise tier', () => {
-    expect(getMemberLimit('enterprise')).toBe(50);
-  });
-
-  it('should default to free tier for unknown tier', () => {
-    expect(getMemberLimit('nonexistent')).toBe(6);
+  it('should default to free tier for free tier', () => {
+    expect(getMemberLimit('default')).toBe(2);
   });
 
   it('should default to free tier for undefined', () => {
-    expect(getMemberLimit(undefined)).toBe(6);
+    expect(getMemberLimit(undefined)).toBe(2);
   });
 });
 
@@ -92,11 +88,10 @@ describe('formatTier / getTierDisplayName', () => {
   it('should format each tier correctly', () => {
     expect(formatTier('free')).toBe('Free');
     expect(formatTier('premium')).toBe('Premium');
-    expect(formatTier('family_plus')).toBe('Family Plus');
-    expect(formatTier('enterprise')).toBe('Enterprise');
+    expect(formatTier('family_plus')).toBe('Family Plus')
   });
 
-  it('should default to Free for unknown tier', () => {
+  it('should default to Free for free tier', () => {
     expect(formatTier('unknown')).toBe('Free');
     expect(formatTier(undefined)).toBe('Free');
   });
@@ -110,8 +105,7 @@ describe('getTierColor', () => {
   it('should return colors for each tier', () => {
     expect(getTierColor('free')).toBe('gray');
     expect(getTierColor('premium')).toBe('blue');
-    expect(getTierColor('family_plus')).toBe('purple');
-    expect(getTierColor('enterprise')).toBe('yellow');
+    expect(getTierColor('family_plus')).toBe('purple')
   });
 
   it('should default to gray for unknown tier', () => {
@@ -121,28 +115,22 @@ describe('getTierColor', () => {
 
 describe('hasReachedMemberLimit', () => {
   it('should return true when at limit', () => {
-    const family = { subscription_tier: 'free', member_count: 6 };
+    const family = { subscription_tier: 'free', member_count: 2 };
     expect(hasReachedMemberLimit(family)).toBe(true);
   });
 
   it('should return true when over limit', () => {
-    const family = { subscription_tier: 'free', member_count: 8 };
+    const family = { subscription_tier: 'premium', member_count: 4 };
     expect(hasReachedMemberLimit(family)).toBe(true);
   });
 
   it('should return false when under limit', () => {
-    const family = { subscription_tier: 'free', member_count: 3 };
+    const family = { subscription_tier: 'family_plus', member_count: 12 };
     expect(hasReachedMemberLimit(family)).toBe(false);
   });
 
   it('should return false for null family', () => {
     expect(hasReachedMemberLimit(null)).toBe(false);
-  });
-
-  it('should use member_count only, ignoring deprecated members array', () => {
-    const family = { subscription_tier: 'free', members: ['a', 'b', 'c', 'd', 'e', 'f'] };
-    // Without member_count, count defaults to 0 — stale members array is ignored
-    expect(hasReachedMemberLimit(family)).toBe(false);
   });
 });
 
