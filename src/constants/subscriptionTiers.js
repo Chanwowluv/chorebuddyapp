@@ -15,7 +15,7 @@ export const SUBSCRIPTION_TIERS = {
 
 export const SUBSCRIPTION_FEATURES = {
   free: {
-    max_family_members: 6,
+    max_family_members: 2,
     max_redeemable_items: 5,
     max_chores: 10,
 
