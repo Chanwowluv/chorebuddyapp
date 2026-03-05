@@ -13,7 +13,7 @@ const plans = [
     name: 'Free',
     price: 0,
     features: [
-      'Up to 3 family members',
+      'Up to 2 family members',
       'Up to 10 chores',
       'Up to 5 reward items',
       'Manual chore assignment',
@@ -29,7 +29,7 @@ const plans = [
     price: 15,
     yearlyPrice: 120,
     features: [
-      'Unlimited family members',
+      '4 family members',
       'Unlimited chores & rewards',
       'ChoreAI smart assignments',
       'Recurring chores & rotations',
@@ -50,7 +50,7 @@ const plans = [
     price: 25,
     yearlyPrice: 200,
     features: [
-      'Unlimited family members',
+      '12 family members',
       'Everything in Premium',
       'Family goals & challenges',
       'Advanced analytics & reports',
