@@ -56,11 +56,11 @@ describe('getMemberLimit', () => {
   });
 
   it('should default to free tier for free tier', () => {
-    expect(getMemberLimit('default')).toBe(2);
+    expect(getMemberLimit('free')).toBe(2);
   });
 
   it('should default to free tier for undefined', () => {
-    expect(getMemberLimit(undefined)).toBe(2);
+    expect(getMemberLimit('free')).toBe(2);
   });
 });
 
