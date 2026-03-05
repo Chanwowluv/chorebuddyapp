@@ -13,6 +13,7 @@ import OnboardingTour from './components/onboarding/OnboardingTour';
 import UserAvatar from './components/profile/UserAvatar';
 import { isParent as checkParent } from '@/utils/roles';
 import { PUBLIC_PAGES } from '@/constants/publicPages';
+import MobileHeader from './components/layout/MobileHeader';
 
 const navigationItems = [
 {
@@ -321,15 +322,10 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          <div className="mb-4 px-8 py-4 lg:hidden flex items-center gap-4">
-            <div className="funky-button w-14 h-14 bg-[#C3B1E1] flex items-center justify-center">
-              <Sparkles className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl header-font text-[#2B59C3]">ChoreBuddy App</h1>
-            </div>
+          <MobileHeader currentPageName={currentPageName} />
+          <div className="pt-16 lg:pt-0">
+            {children}
           </div>
-          {children}
         </div>
       </div>
 
@@ -401,56 +397,70 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
         </div>
       </footer>
       {/* Mobile Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FDFBF5]/80 backdrop-blur-sm border-t-3 border-[#5E3B85] overflow-hidden">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#FDFBF5]/80 backdrop-blur-sm border-t-3 border-[#5E3B85] overflow-hidden pb-safe">
         <div className="flex items-center justify-start gap-2 p-2 sm:p-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
           {navigationItems.map((item) => {
             const isActive = location.pathname === item.url;
             return (
-              <Link
+              <button
                 key={item.title}
-                to={item.url}
-                className={`flex flex-col items-center gap-1 transition-transform duration-200 flex-shrink-0 ${isActive ? 'scale-105' : 'scale-95 opacity-80'}`}
+                onClick={() => {
+                  if (isActive) {
+                    navigate(item.url, { replace: true });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else {
+                    navigate(item.url);
+                  }
+                }}
+                className={`flex flex-col items-center gap-1 transition-transform duration-200 flex-shrink-0 select-none ${isActive ? 'scale-105' : 'scale-95 opacity-80'}`}
               >
                 <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${item.color}`}>
                   <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <span className="text-[10px] body-font text-[#5E3B85] leading-tight">{item.title}</span>
-              </Link>
+              </button>
             );
           })}
           {checkParent(currentUser) && adminNavigationItems.map((item) => {
             const isActive = location.pathname === item.url;
             return (
-              <Link
+              <button
                 key={item.title}
-                to={item.url}
-                className={`flex flex-col items-center gap-1 transition-transform duration-200 flex-shrink-0 ${isActive ? 'scale-105' : 'scale-95 opacity-80'}`}
+                onClick={() => {
+                  if (isActive) {
+                    navigate(item.url, { replace: true });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else {
+                    navigate(item.url);
+                  }
+                }}
+                className={`flex flex-col items-center gap-1 transition-transform duration-200 flex-shrink-0 select-none ${isActive ? 'scale-105' : 'scale-95 opacity-80'}`}
               >
                 <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${item.color}`}>
                   <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
                 <span className="text-[10px] body-font text-[#5E3B85] leading-tight">{item.title}</span>
-              </Link>
+              </button>
             );
           })}
-          <Link
-            to={createPageUrl("Account")}
-            className={`flex flex-col items-center gap-1 transition-transform duration-200 scale-95 opacity-80 flex-shrink-0`}
+          <button
+            onClick={() => navigate(createPageUrl("Account"))}
+            className={`flex flex-col items-center gap-1 transition-transform duration-200 scale-95 opacity-80 flex-shrink-0 select-none`}
           >
             <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-gray-200 text-gray-700`}>
               <Settings className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <span className="text-[10px] body-font text-[#5E3B85] leading-tight">Settings</span>
-          </Link>
-          <Link
-            to={createPageUrl("Pricing")}
-            className={`flex flex-col items-center gap-1 transition-transform duration-200 scale-95 opacity-80 flex-shrink-0`}
+          </button>
+          <button
+            onClick={() => navigate(createPageUrl("Pricing"))}
+            className={`flex flex-col items-center gap-1 transition-transform duration-200 scale-95 opacity-80 flex-shrink-0 select-none`}
           >
             <div className={`funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-green-400 text-green-800`}>
               <Zap className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <span className="text-[10px] body-font text-[#5E3B85] leading-tight">Upgrade</span>
-          </Link>
+          </button>
         </div>
       </div>
     </div>
