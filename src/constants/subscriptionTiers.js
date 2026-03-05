@@ -10,8 +10,7 @@
 export const SUBSCRIPTION_TIERS = {
   FREE: 'free',
   PREMIUM: 'premium',
-  FAMILY_PLUS: 'family_plus',
-  ENTERPRISE: 'enterprise',
+  FAMILY_PLUS: 'family_plus'
 };
 
 export const SUBSCRIPTION_FEATURES = {
