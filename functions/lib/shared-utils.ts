@@ -416,12 +416,17 @@ export function canUserJoinFamilyWithTier(
 
   const tier = family.subscription_tier || 'free';
   const tierLimit = TIER_MEMBER_LIMITS[tier];
-  // No entry in TIER_MEMBER_LIMITS means unlimited (e.g. family_plus)
-  if (tierLimit !== undefined && currentSize >= tierLimit) {
+  // No entry means unlimited for known tiers (family_plus);
+  // unknown tiers fall back to free limits to prevent bypass
+  const UNLIMITED_TIERS = [SUBSCRIPTION_TIERS.FAMILY_PLUS];
+  const effectiveLimit = tierLimit !== undefined
+    ? tierLimit
+    : UNLIMITED_TIERS.includes(tier) ? undefined : TIER_MEMBER_LIMITS.free;
+  if (effectiveLimit !== undefined && currentSize >= effectiveLimit) {
     return {
       allowed: false,
       reason: 'tier_limit_reached',
-      message: `This family has reached its ${tier} plan limit of ${tierLimit} members. The family owner needs to upgrade.`,
+      message: `This family has reached its ${tier} plan limit of ${effectiveLimit} members. The family owner needs to upgrade.`,
     };
   }
   return { allowed: true };
