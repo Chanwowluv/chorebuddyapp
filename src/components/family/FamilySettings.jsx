@@ -96,8 +96,7 @@ export default function FamilySettings() {
     const tierNames = {
       free: 'FREE',
       premium: 'PREMIUM',
-      family_plus: 'FAMILY PLUS',
-      enterprise: 'ENTERPRISE'
+      family_plus: 'FAMILY PLUS'
     };
 
     return (
