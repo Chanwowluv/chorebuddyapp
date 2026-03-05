@@ -34,7 +34,7 @@ export const SUBSCRIPTION_FEATURES = {
     family_invitations: false,
   },
   premium: {
-    max_family_members: 6,
+    max_family_members: 4,
     max_redeemable_items: -1,
     max_chores: -1,
 
@@ -53,7 +53,7 @@ export const SUBSCRIPTION_FEATURES = {
     family_invitations: true,
   },
   family_plus: {
-    max_family_members: 30,
+    max_family_members: 12,
     max_redeemable_items: -1,
     max_chores: -1,
 
