@@ -90,6 +90,14 @@ const handleCreateCustomer = async (user, base44) => {
     );
 };
 
+const handleListCustomers = async () => {
+    const customers = await stripe.customers.list();
+    return new Response(JSON.stringify(customers.data), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+};
+
 const handleCreatePortalSession = async (user, base44, origin) => {
     if (!user.stripe_customer_id) {
         return new Response(JSON.stringify({ error: "No customer ID found" }), { status: 400 });
@@ -238,6 +246,8 @@ Deno.serve(async (req) => {
                 return handleCreateCheckoutSession(payload, user, base44, origin);
             case 'create-portal-session':
                 return handleCreatePortalSession(user, base44, origin);
+            case 'list-customers':
+                return handleListCustomers();
             default:
                 return new Response(JSON.stringify({ error: "Endpoint not found" }), { status: 404 });
         }
