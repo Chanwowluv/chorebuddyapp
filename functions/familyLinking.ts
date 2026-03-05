@@ -45,14 +45,12 @@ const SUBSCRIPTION_TIERS = {
   FAMILY_PLUS: 'family_plus'
 };
 
-const MAX_FAMILY_SIZE = 50;
+const MAX_FAMILY_SIZE = 100;
 const CODE_EXPIRY_HOURS = 48;
 
 const TIER_MEMBER_LIMITS = {
-  free: 6,
-  premium: 15,
-  family_plus: 30,
-  enterprise: 50,
+  free: 2,
+  premium: 4,
 };
 
 function sanitizeCode(code) {
@@ -214,12 +212,18 @@ function canUserJoinFamilyWithTier(
   if (!baseCheck.allowed) return baseCheck;
 
   const tier = family.subscription_tier || 'free';
-  const tierLimit = TIER_MEMBER_LIMITS[tier] || TIER_MEMBER_LIMITS.free;
-  if (currentSize >= tierLimit) {
+  const tierLimit = TIER_MEMBER_LIMITS[tier];
+  // No entry means unlimited for known tiers (family_plus);
+  // unknown tiers fall back to free limits to prevent bypass
+  const UNLIMITED_TIERS = [SUBSCRIPTION_TIERS.FAMILY_PLUS];
+  const effectiveLimit = tierLimit !== undefined
+    ? tierLimit
+    : UNLIMITED_TIERS.includes(tier) ? undefined : TIER_MEMBER_LIMITS.free;
+  if (effectiveLimit !== undefined && currentSize >= effectiveLimit) {
     return {
       allowed: false,
       reason: 'tier_limit_reached',
-      message: `This family has reached its ${tier} plan limit of ${tierLimit} members. The family owner needs to upgrade.`,
+      message: `This family has reached its ${tier} plan limit of ${effectiveLimit} members. The family owner needs to upgrade.`,
     };
   }
   return { allowed: true };

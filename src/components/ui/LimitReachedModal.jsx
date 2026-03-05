@@ -14,6 +14,7 @@ export default function LimitReachedModal({
   requiredTier 
 }) {
   const getLimitMessage = () => {
+    if (maxCount === -1) return `You've reached your plan's limit.`;
     switch (limitType) {
       case 'max_family_members':
         return `You've reached the limit of ${maxCount} family members on your current plan.`;

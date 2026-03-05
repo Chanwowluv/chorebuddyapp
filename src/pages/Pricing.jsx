@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Star, ShieldCheck, AlertCircle, Users, Building2 } from 'lucide-react';
+import { Loader2, Star, ShieldCheck, AlertCircle, Users } from 'lucide-react';
 import PlanCard from '../components/pricing/PlanCard';
 import { stripeCheckout } from '@/functions/stripeCheckout';
 import { toast } from 'sonner';
@@ -50,11 +50,12 @@ const plans = [
     price: 25,
     yearlyPrice: 200,
     features: [
-      '12 family members',
+      'Unlimited family members',
       'Everything in Premium',
       'Family goals & challenges',
       'Advanced analytics & reports',
       'Weekly email reports',
+      'Premium support',
       'Multi-household support'
     ],
     icon: Users,
@@ -194,7 +195,7 @@ export default function Pricing() {
       </div>
 
       {/* Plans Grid */}
-      <div className="mx-4 md:mx-8 lg:mx-16 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 md:gap-8 items-stretch max-w-7xl mx-auto">
+      <div className="mx-4 md:mx-8 lg:mx-16 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 items-stretch max-w-5xl mx-auto">
         {plans.map((plan) => (
           <PlanCard
             key={plan.id}

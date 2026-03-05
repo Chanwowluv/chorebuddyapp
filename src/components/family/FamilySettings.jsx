@@ -294,7 +294,7 @@ export default function FamilySettings() {
                 Family Members
               </h3>
               <p className="body-font-light text-sm text-gray-600">
-                {family.member_count} / {getMemberLimit(family.subscription_tier || 'free')} members
+                {family.member_count} / {getMemberLimit(family.subscription_tier || 'free') === -1 ? 'Unlimited' : getMemberLimit(family.subscription_tier || 'free')} members
               </p>
             </div>
 

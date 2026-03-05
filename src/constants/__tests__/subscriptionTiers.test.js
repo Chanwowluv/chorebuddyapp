@@ -13,7 +13,7 @@ import {
 } from '../subscriptionTiers';
 
 describe('SUBSCRIPTION_TIERS', () => {
-  it('should define all four tiers', () => {
+  it('should define all three tiers', () => {
     expect(SUBSCRIPTION_TIERS.FREE).toBe('free');
     expect(SUBSCRIPTION_TIERS.PREMIUM).toBe('premium');
     expect(SUBSCRIPTION_TIERS.FAMILY_PLUS).toBe('family_plus');
@@ -21,8 +21,8 @@ describe('SUBSCRIPTION_TIERS', () => {
 });
 
 describe('SUBSCRIPTION_FEATURES', () => {
-  it('should have exactly 4 tiers', () => {
-    expect(Object.keys(SUBSCRIPTION_FEATURES)).toHaveLength(4);
+  it('should have exactly 3 tiers', () => {
+    expect(Object.keys(SUBSCRIPTION_FEATURES)).toHaveLength(3);
   });
 
   it('all tiers should have the same set of keys', () => {
@@ -51,8 +51,8 @@ describe('getMemberLimit', () => {
     expect(getMemberLimit('premium')).toBe(4);
   });
 
-  it('should return 12 for family_plus tier', () => {
-    expect(getMemberLimit('family_plus')).toBe(12);
+  it('should return -1 (unlimited) for family_plus tier', () => {
+    expect(getMemberLimit('family_plus')).toBe(-1);
   });
 
   it('should default to free tier for free tier', () => {

@@ -53,7 +53,7 @@ export const SUBSCRIPTION_FEATURES = {
     family_invitations: true,
   },
   family_plus: {
-    max_family_members: 12,
+    max_family_members: -1,
     max_redeemable_items: -1,
     max_chores: -1,
 
@@ -61,7 +61,7 @@ export const SUBSCRIPTION_FEATURES = {
     advanced_chore_settings: true,
     family_goals: true,
     analytics_export: true,
-    premium_support: false,
+    premium_support: true,
     recurring_chores: true,
     chore_approval_system: true,
     photo_verification: true,
@@ -103,6 +103,7 @@ export function getItemLimit(tier) {
 export function hasReachedMemberLimit(family) {
   if (!family) return false;
   const limit = getMemberLimit(family.subscription_tier || 'free');
+  if (limit === -1) return false; // unlimited
   const currentCount = family.member_count || 0;
   return currentCount >= limit;
 }
@@ -113,6 +114,7 @@ export function hasReachedMemberLimit(family) {
 export function getRemainingSlots(family) {
   if (!family) return 0;
   const limit = getMemberLimit(family.subscription_tier || 'free');
+  if (limit === -1) return Infinity; // unlimited
   const currentCount = family.member_count || 0;
   return Math.max(0, limit - currentCount);
 }
