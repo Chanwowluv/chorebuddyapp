@@ -59,22 +59,6 @@ const plans = [
     ],
     icon: Users,
     color: { border: 'border-[#2B59C3]', bg: 'bg-[#2B59C3]', icon: 'text-white', button: 'bg-[#2B59C3]' }
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    price: 49,
-    yearlyPrice: 390,
-    features: [
-      'Unlimited family members',
-      'Everything in Family Plus',
-      'Priority support',
-      'Dedicated account manager',
-      'Custom integrations',
-      'SLA guarantees'
-    ],
-    icon: Building2,
-    color: { border: 'border-[#FF6B35]', bg: 'bg-[#FF6B35]', icon: 'text-white', button: 'bg-[#FF6B35]' }
   }
 ];
 
