@@ -266,7 +266,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
                   <UserAvatar avatarId={currentUser.data.avatar} size="md" />
                   <div>
                     <p className="body-font text-sm text-[#5E3B85]">{currentUser.full_name}</p>
-                    <p className="text-xs text-gray-500">{{ free: 'Free', premium: 'Premium', family_plus: 'Family Plus', enterprise: 'Enterprise' }[currentUser.subscription_tier] || 'Free'}</p>
+                    <p className="text-xs text-gray-500">{{ free: 'Free', premium: 'Premium', family_plus: 'Family Plus'}[currentUser.subscription_tier] || 'Free'}</p>
                   </div>
                 </div>
               )}
