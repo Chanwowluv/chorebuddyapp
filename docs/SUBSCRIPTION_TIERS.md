@@ -1,6 +1,6 @@
 # Subscription Tiers
 
-ChoreBuddyApp offers four subscription tiers: **Free**, **Premium**, **Family Plus**, and **Enterprise**.
+ChoreBuddyApp offers four subscription tiers: **Free**, **Premium**, **Family Plus**
 
 ---
 
