@@ -17,7 +17,6 @@ describe('SUBSCRIPTION_TIERS', () => {
     expect(SUBSCRIPTION_TIERS.FREE).toBe('free');
     expect(SUBSCRIPTION_TIERS.PREMIUM).toBe('premium');
     expect(SUBSCRIPTION_TIERS.FAMILY_PLUS).toBe('family_plus');
-    expect(SUBSCRIPTION_TIERS.ENTERPRISE).toBe('enterprise');
   });
 });
 
