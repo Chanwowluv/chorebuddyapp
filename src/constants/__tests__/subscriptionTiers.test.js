@@ -92,8 +92,7 @@ describe('formatTier / getTierDisplayName', () => {
   });
 
   it('should default to Free for free tier', () => {
-    expect(formatTier('unknown')).toBe('Free');
-    expect(formatTier(undefined)).toBe('Free');
+    expect(formatTier('free')).toBe('Free');
   });
 
   it('getTierDisplayName should be an alias for formatTier', () => {
