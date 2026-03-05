@@ -323,7 +323,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           <MobileHeader currentPageName={currentPageName} />
-          <div className="pt-16 lg:pt-0">
+          <div className="pt-mobile-header lg:pt-0">
             {children}
           </div>
         </div>

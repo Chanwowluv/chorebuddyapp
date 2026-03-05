@@ -15,13 +15,21 @@ const Select = ({ value, onValueChange, children, open: controlledOpen, onOpenCh
   const isMobile = useIsMobile()
   const [internalOpen, setInternalOpen] = React.useState(false)
   const [selectedLabel, setSelectedLabel] = React.useState("")
+  const [itemRegistry, setItemRegistry] = React.useState({})
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen
   const setOpen = onOpenChange || setInternalOpen
 
+  const registerItem = React.useCallback((itemValue, label) => {
+    setItemRegistry(prev => {
+      if (prev[itemValue] === label) return prev
+      return { ...prev, [itemValue]: label }
+    })
+  }, [])
+
   if (isMobile) {
     return (
-      <MobileSelectContext.Provider value={{ value, onValueChange, open, setOpen, selectedLabel, setSelectedLabel }}>
+      <MobileSelectContext.Provider value={{ value, onValueChange, open, setOpen, selectedLabel, setSelectedLabel, itemRegistry, registerItem }}>
         {children}
       </MobileSelectContext.Provider>
     )
@@ -39,22 +47,32 @@ const Select = ({ value, onValueChange, children, open: controlledOpen, onOpenCh
 const SelectGroup = React.forwardRef(({ className, children, ...props }, ref) => {
   const mobileCtx = React.useContext(MobileSelectContext)
   if (mobileCtx) {
-    return <div ref={ref} className={className} {...props}>{children}</div>
+    return <div ref={ref} className={className}>{children}</div>
   }
   return <SelectPrimitive.Group ref={ref} className={className} {...props}>{children}</SelectPrimitive.Group>
 })
 SelectGroup.displayName = "SelectGroup"
 
-const SelectValue = React.forwardRef(({ placeholder, className, ...props }, ref) => {
+const SelectValue = React.forwardRef(({ placeholder, className }, ref) => {
   const mobileCtx = React.useContext(MobileSelectContext)
   if (mobileCtx) {
+    const displayText = mobileCtx.itemRegistry?.[mobileCtx.value]
+      || mobileCtx.selectedLabel
+      || mobileCtx.value
     return (
-      <span ref={ref} className={cn("[&]:line-clamp-1", className)} {...props}>
-        {mobileCtx.selectedLabel || mobileCtx.value || placeholder}
+      <span
+        ref={ref}
+        className={cn(
+          "line-clamp-1",
+          !displayText && "text-muted-foreground",
+          className
+        )}
+      >
+        {displayText || placeholder}
       </span>
     )
   }
-  return <SelectPrimitive.Value ref={ref} placeholder={placeholder} className={className} {...props} />
+  return <SelectPrimitive.Value ref={ref} placeholder={placeholder} className={className} />
 })
 SelectValue.displayName = "SelectValue"
 
@@ -73,7 +91,7 @@ const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) 
         )}
         {...props}>
         {children}
-        <ChevronDown className="h-4 w-4 opacity-50" />
+        <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
       </button>
     )
   }
@@ -88,7 +106,7 @@ const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) 
       {...props}>
       {children}
       <SelectPrimitive.Icon asChild>
-        <ChevronDown className="h-4 w-4 opacity-50" />
+        <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -121,7 +139,7 @@ const SelectContent = React.forwardRef(({ className, children, position = "poppe
 
   if (mobileCtx) {
     return (
-      <DrawerPrimitive.Root open={mobileCtx.open} onOpenChange={mobileCtx.setOpen}>
+      <DrawerPrimitive.Root open={mobileCtx.open} onOpenChange={mobileCtx.setOpen} shouldScaleBackground={false}>
         <DrawerPrimitive.Portal>
           <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
           <DrawerPrimitive.Content
@@ -163,14 +181,13 @@ const SelectContent = React.forwardRef(({ className, children, position = "poppe
 })
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
-const SelectLabel = React.forwardRef(({ className, ...props }, ref) => {
+const SelectLabel = React.forwardRef(({ className, children, ...props }, ref) => {
   const mobileCtx = React.useContext(MobileSelectContext)
   if (mobileCtx) {
     return (
-      <div
-        ref={ref}
-        className={cn("px-2 py-1.5 text-sm font-semibold", className)}
-        {...props} />
+      <div ref={ref} className={cn("px-2 py-1.5 text-sm font-semibold", className)}>
+        {children}
+      </div>
     )
   }
   return (
@@ -184,6 +201,14 @@ SelectLabel.displayName = SelectPrimitive.Label.displayName
 
 const SelectItem = React.forwardRef(({ className, children, value, ...props }, ref) => {
   const mobileCtx = React.useContext(MobileSelectContext)
+
+  // Register this item's label in the mobile context so SelectValue can look it up
+  React.useEffect(() => {
+    if (mobileCtx?.registerItem) {
+      const label = typeof children === 'string' ? children : value
+      mobileCtx.registerItem(value, label)
+    }
+  }, [mobileCtx, value, children])
 
   if (mobileCtx) {
     const isSelected = mobileCtx.value === value
@@ -236,7 +261,7 @@ SelectItem.displayName = SelectPrimitive.Item.displayName
 const SelectSeparator = React.forwardRef(({ className, ...props }, ref) => {
   const mobileCtx = React.useContext(MobileSelectContext)
   if (mobileCtx) {
-    return <div ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} {...props} />
+    return <div ref={ref} className={cn("-mx-1 my-1 h-px bg-muted", className)} />
   }
   return (
     <SelectPrimitive.Separator

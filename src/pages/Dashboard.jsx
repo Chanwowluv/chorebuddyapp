@@ -146,6 +146,7 @@ export default function Dashboard() {
   if (isParent) {
     return (
       <ErrorBoundaryWithRetry level="page">
+      <PullToRefresh onRefresh={fetchData}>
       <div className="min-h-screen relative">
         <PointsEarnedNotification
           points={pointsEarned.amount}
@@ -197,6 +198,7 @@ export default function Dashboard() {
           isAssigning={isAssigning}
         />
       </div>
+      </PullToRefresh>
       </ErrorBoundaryWithRetry>
     );
   }
