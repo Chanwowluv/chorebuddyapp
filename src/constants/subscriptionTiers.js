@@ -74,10 +74,23 @@ export const SUBSCRIPTION_FEATURES = {
 }
 
 /**
+ * Check if a tier string is a valid subscription tier.
+ * Only 'free', 'premium', and 'family_plus' are recognized.
+ */
+export function isValidTier(tier) {
+  return tier in SUBSCRIPTION_FEATURES;
+}
+
+/**
  * Get the max family member limit for a tier.
+ * Throws if the tier is not recognized.
  */
 export function getMemberLimit(tier) {
-  const features = SUBSCRIPTION_FEATURES[tier] || SUBSCRIPTION_FEATURES.free;
+  const features = SUBSCRIPTION_FEATURES[tier];
+  if (!features) {
+    console.warn(`[subscriptionTiers] Unknown tier "${tier}", defaulting to free limits`);
+    return SUBSCRIPTION_FEATURES.free.max_family_members;
+  }
   return features.max_family_members;
 }
 
@@ -85,7 +98,11 @@ export function getMemberLimit(tier) {
  * Get the max chores limit for a tier. Returns -1 for unlimited.
  */
 export function getChoreLimit(tier) {
-  const features = SUBSCRIPTION_FEATURES[tier] || SUBSCRIPTION_FEATURES.free;
+  const features = SUBSCRIPTION_FEATURES[tier];
+  if (!features) {
+    console.warn(`[subscriptionTiers] Unknown tier "${tier}", defaulting to free limits`);
+    return SUBSCRIPTION_FEATURES.free.max_chores;
+  }
   return features.max_chores;
 }
 
@@ -93,7 +110,11 @@ export function getChoreLimit(tier) {
  * Get the max redeemable items limit for a tier. Returns -1 for unlimited.
  */
 export function getItemLimit(tier) {
-  const features = SUBSCRIPTION_FEATURES[tier] || SUBSCRIPTION_FEATURES.free;
+  const features = SUBSCRIPTION_FEATURES[tier];
+  if (!features) {
+    console.warn(`[subscriptionTiers] Unknown tier "${tier}", defaulting to free limits`);
+    return SUBSCRIPTION_FEATURES.free.max_redeemable_items;
+  }
   return features.max_redeemable_items;
 }
 
@@ -128,6 +149,9 @@ export function formatTier(tier) {
     premium: 'Premium',
     family_plus: 'Family Plus'
   };
+  if (!names[tier]) {
+    console.warn(`[subscriptionTiers] Unknown tier "${tier}", displaying as "Free"`);
+  }
   return names[tier] || 'Free';
 }
 
@@ -143,5 +167,8 @@ export function getTierColor(tier) {
     premium: 'blue',
     family_plus: 'purple'
   };
+  if (!colors[tier]) {
+    console.warn(`[subscriptionTiers] Unknown tier "${tier}", using default color`);
+  }
   return colors[tier] || 'gray';
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   SUBSCRIPTION_TIERS,
   SUBSCRIPTION_FEATURES,
@@ -10,6 +10,7 @@ import {
   formatTier,
   getTierDisplayName,
   getTierColor,
+  isValidTier,
 } from '../subscriptionTiers';
 
 describe('SUBSCRIPTION_TIERS', () => {
@@ -107,7 +108,24 @@ describe('getTierColor', () => {
     expect(getTierColor('family_plus')).toBe('purple')
   });
 
-  it('should default to gray for unknown tier', () => {
+  it('should default to gray and warn for unknown tier', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(getTierColor('unknown')).toBe('gray');
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown tier'));
+    warnSpy.mockRestore();
+  });
+});
+
+describe('isValidTier', () => {
+  it('should return true for all valid tiers', () => {
+    expect(isValidTier('free')).toBe(true);
+    expect(isValidTier('premium')).toBe(true);
+    expect(isValidTier('family_plus')).toBe(true);
+  });
+
+  it('should return false for unknown tiers', () => {
+    expect(isValidTier('enterprise')).toBe(false);
+    expect(isValidTier('garbage')).toBe(false);
+    expect(isValidTier('')).toBe(false);
   });
 });

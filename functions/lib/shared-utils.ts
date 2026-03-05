@@ -67,12 +67,24 @@ export const SUBSCRIPTION_TIERS = {
 
 // Frontend source of truth for tier limits: src/constants/subscriptionTiers.js
 // Keep this value in sync when updating tier limits.
+
+/**
+ * Absolute maximum family size, enforced as a backstop for ALL tiers
+ * (including unlimited ones like family_plus).
+ * Checked in canUserJoinFamily(), which runs before tier-specific checks.
+ */
 export const MAX_FAMILY_SIZE = 100;
 export const CODE_EXPIRY_HOURS = 48;
 
+// -1 means unlimited. Convention matches frontend (src/constants/subscriptionTiers.js).
+// WARNING: Limits were lowered (free: 6→2, premium: 15→4). Existing families may
+// exceed these limits (grandfathered). New joins are blocked but existing members
+// are not removed — that is a product decision, not enforced by code.
+// Only 'free', 'premium', and 'family_plus' are valid tiers.
 export const TIER_MEMBER_LIMITS: Record<string, number> = {
   free: 2,
   premium: 4,
+  family_plus: -1,
 };
 
 // ==========================================
@@ -404,29 +416,44 @@ export function canUserJoinFamily(
 }
 
 /**
- * Check if user can join family with tier-based limits
+ * Check if a subscription tier is valid.
+ * Only 'free', 'premium', and 'family_plus' are recognized.
+ */
+export function isValidTier(tier: string): boolean {
+  return tier in TIER_MEMBER_LIMITS;
+}
+
+/**
+ * Check if user can join family with tier-based limits.
+ * Base check (canUserJoinFamily) enforces MAX_FAMILY_SIZE as an absolute cap.
  */
 export function canUserJoinFamilyWithTier(
   user: any,
   family: any,
   currentSize: number
 ): { allowed: boolean; reason?: string; message?: string } {
+  // Base check enforces MAX_FAMILY_SIZE as an absolute cap for all tiers
   const baseCheck = canUserJoinFamily(user, family, currentSize);
   if (!baseCheck.allowed) return baseCheck;
 
   const tier = family.subscription_tier || 'free';
+
+  // Reject unknown tiers — only free, premium, and family_plus are valid
+  if (!isValidTier(tier)) {
+    return {
+      allowed: false,
+      reason: 'invalid_tier',
+      message: `Unknown subscription tier "${tier}". Please contact support.`,
+    };
+  }
+
   const tierLimit = TIER_MEMBER_LIMITS[tier];
-  // No entry means unlimited for known tiers (family_plus);
-  // unknown tiers fall back to free limits to prevent bypass
-  const UNLIMITED_TIERS = [SUBSCRIPTION_TIERS.FAMILY_PLUS];
-  const effectiveLimit = tierLimit !== undefined
-    ? tierLimit
-    : UNLIMITED_TIERS.includes(tier) ? undefined : TIER_MEMBER_LIMITS.free;
-  if (effectiveLimit !== undefined && currentSize >= effectiveLimit) {
+  // -1 means unlimited; only enforce if positive
+  if (tierLimit !== -1 && currentSize >= tierLimit) {
     return {
       allowed: false,
       reason: 'tier_limit_reached',
-      message: `This family has reached its ${tier} plan limit of ${effectiveLimit} members. The family owner needs to upgrade.`,
+      message: `This family has reached its ${tier} plan limit of ${tierLimit} members. The family owner needs to upgrade.`,
     };
   }
   return { allowed: true };
