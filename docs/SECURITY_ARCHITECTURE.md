@@ -183,26 +183,25 @@ Defined in `src/constants/subscriptionTiers.js` (frontend) and `functions/lib/sh
 
 | Tier | Members | Chores | Redeemable Items |
 |------|---------|--------|-----------------|
-| Free | 6 | 10 | 5 |
-| Premium | 15 | Unlimited | Unlimited |
-| Family Plus | 30 | Unlimited | Unlimited |
-| Enterprise | 50 | Unlimited | Unlimited |
+| Free | 2 | 10 | 5 |
+| Premium | 4 | Unlimited | Unlimited |
+| Family Plus | 12 | Unlimited | Unlimited |
 
 ### Feature Matrix
 
-| Feature | Free | Premium | Family Plus | Enterprise |
+| Feature | Free | Premium | Family Plus |
 |---------|------|---------|------------|------------|
-| ChoreAI smart assignment | - | Y | Y | Y |
-| Recurring chores | - | Y | Y | Y |
-| Approval system | - | Y | Y | Y |
-| Photo verification | - | Y | Y | Y |
-| Custom points | - | Y | Y | Y |
-| Priority assignment | - | Y | Y | Y |
-| Family invitations | - | Y | Y | Y |
-| Family goals | - | - | Y | Y |
-| Analytics export | - | - | Y | Y |
-| Weekly reports | - | - | Y | Y |
-| Premium support | - | - | - | Y |
+| ChoreAI smart assignment | - | Y | Y |
+| Recurring chores | - | Y | Y | 
+| Approval system | - | Y | Y | 
+| Photo verification | - | Y | Y | 
+| Custom points | - | Y | Y | 
+| Priority assignment | - | Y | Y | 
+| Family invitations | - | Y | Y | 
+| Family goals | - | - | Y | 
+| Analytics export | - | - | Y | 
+| Weekly reports | - | - | Y | 
+| Premium support | - | - | Y | 
 
 ### Enforcement
 
