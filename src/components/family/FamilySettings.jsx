@@ -90,7 +90,6 @@ export default function FamilySettings() {
       free: 'bg-gray-200 text-gray-800',
       premium: 'bg-blue-200 text-blue-800',
       family_plus: 'bg-purple-200 text-purple-800',
-      enterprise: 'bg-yellow-200 text-yellow-800'
     };
 
     const tierNames = {
