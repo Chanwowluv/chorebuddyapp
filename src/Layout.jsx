@@ -18,6 +18,7 @@ import UserAvatar from "./components/profile/UserAvatar";
 import { isParent as checkParent } from "@/utils/roles";
 import { PUBLIC_PAGES } from "@/constants/publicPages";
 import MobileHeader from "./components/layout/MobileHeader";
+import "./globals.css";
 
 // ─── Navigation config with role visibility ─────────────────────────────────
 
