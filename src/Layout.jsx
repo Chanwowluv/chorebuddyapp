@@ -43,7 +43,7 @@ const navigationItems = [
     hover: "hover:bg-[#f590b8]",
     active: "bg-[#f590b8]",
     visibleTo: ["parent"],
-    mobileOrder: null, // hidden from mobile primary nav
+    mobileOrder: 2, 
   },
   {
     title: "Chores",
@@ -53,7 +53,7 @@ const navigationItems = [
     hover: "hover:bg-[#fa5a1f]",
     active: "bg-[#fa5a1f]",
     visibleTo: ALL_ROLES,
-    mobileOrder: 2,
+    mobileOrder: 3,
   },
   {
     title: "Schedule",
@@ -63,7 +63,7 @@ const navigationItems = [
     hover: "hover:bg-[#b19dcb]",
     active: "bg-[#b19dcb]",
     visibleTo: ALL_ROLES,
-    mobileOrder: 3,
+    mobileOrder: 4,
   },
   {
     title: "History",
@@ -73,7 +73,7 @@ const navigationItems = [
     hover: "hover:bg-green-600",
     active: "bg-green-600",
     visibleTo: ALL_ROLES,
-    mobileOrder: null,
+    mobileOrder: 9,
   },
   {
     title: "Messages",
@@ -83,7 +83,7 @@ const navigationItems = [
     hover: "hover:bg-[#b19dcb]",
     active: "bg-[#b19dcb]",
     visibleTo: ALL_ROLES,
-    mobileOrder: null,
+    mobileOrder: 6,
   },
   {
     title: "Calendar",
@@ -93,7 +93,7 @@ const navigationItems = [
     hover: "hover:bg-[#fa5a1f]",
     active: "bg-[#fa5a1f]",
     visibleTo: ALL_ROLES,
-    mobileOrder: null,
+    mobileOrder: 7,
   },
   {
     title: "Notices",
@@ -103,7 +103,7 @@ const navigationItems = [
     hover: "hover:bg-[#f590b8]",
     active: "bg-[#f590b8]",
     visibleTo: ALL_ROLES,
-    mobileOrder: null,
+    mobileOrder: 8,
   },
   {
     title: "Store",
@@ -113,7 +113,7 @@ const navigationItems = [
     hover: "hover:bg-yellow-500",
     active: "bg-yellow-500",
     visibleTo: ALL_ROLES,
-    mobileOrder: 4,
+    mobileOrder: 10,
   },
   {
     title: "Goals",
@@ -123,7 +123,7 @@ const navigationItems = [
     hover: "hover:bg-green-500",
     active: "bg-green-500",
     visibleTo: ALL_ROLES,
-    mobileOrder: null,
+    mobileOrder: 5,
   },
 ];
 
@@ -136,7 +136,7 @@ const adminNavigationItems = [
     hover: "hover:bg-[#4a2d6b]",
     active: "bg-[#4a2d6b]",
     visibleTo: ["parent"],
-    mobileOrder: 5,
+    mobileOrder: 11,
   },
 ];
 
@@ -204,7 +204,7 @@ function MobileNavItem({ item, isActive, onClick }) {
 // ─── Mobile "More" overflow menu ─────────────────────────────────────────────
 
 function MobileMoreMenu({ items, location, navigate }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   if (items.length === 0) return null;
 
