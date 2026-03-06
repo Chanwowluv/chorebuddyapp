@@ -9,7 +9,7 @@ import StepCard from '../components/landing/StepCard';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Home() {
-  const { isAuthenticated } = useAuth(false);
+  const { isAuthenticated } = useAuth(true);
 
   return (
     <div className="bg-[#FDFBF5] text-[#5E3B85]">
