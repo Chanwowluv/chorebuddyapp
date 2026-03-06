@@ -113,8 +113,8 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const onboardingShownRef = React.useRef(false);
+  const [currentUser, setCurrentUser] = useState();
+  const onboardingShownRef = React.useRef();
 
   const isPublicPage = PUBLIC_PAGES.includes(currentPageName);
 
