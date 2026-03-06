@@ -121,7 +121,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
   useEffect(() => {
     // No need to run auth check for public pages
     if (isPublicPage) {
-      setAuthChecked(false);
+      setAuthChecked(true);
       return;
     }
 
