@@ -68,28 +68,28 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
         <TabsList className="grid w-full grid-cols-4 funky-card p-2 h-auto mb-6">
           <TabsTrigger
             value="overview"
-            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm transition-all data-[state=active]:bg-[#2B59C3] data-[state=active]:text-white">
+            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-wrap rounded-sm transition-all data-[state=active]:bg-[#2B59C3] data-[state=active]:text-white">
 
             <LayoutDashboard className="w-4 h-4" />
             <span className="hidden sm:inline">Overview</span>
           </TabsTrigger>
           <TabsTrigger
             value="chores"
-            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm transition-all data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white">
+            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-wrap rounded-sm transition-all data-[state=active]:bg-[#FF6B35] data-[state=active]:text-white">
 
             <Calendar className="w-4 h-4" />
             <span className="hidden sm:inline">This Week</span>
           </TabsTrigger>
           <TabsTrigger
             value="analytics"
-            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm transition-all data-[state=active]:bg-[#C3B1E1] data-[state=active]:text-white">
+            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-wrap rounded-sm transition-all data-[state=active]:bg-[#C3B1E1] data-[state=active]:text-white">
 
             <TrendingUp className="w-4 h-4" />
             <span className="hidden sm:inline">Analytics</span>
           </TabsTrigger>
           <TabsTrigger
             value="rewards"
-            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm transition-all data-[state=active]:bg-[#F7A1C4] data-[state=active]:text-white">
+            className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-wrap rounded-sm transition-all data-[state=active]:bg-[#F7A1C4] data-[state=active]:text-white">
 
             <Gift className="w-4 h-4" />
             <span className="hidden sm:inline">Rewards</span>
