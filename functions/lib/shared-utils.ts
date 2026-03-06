@@ -553,3 +553,8 @@ export function logError(context: string, error: unknown, data?: Record<string, 
   const stack = error instanceof Error ? error.stack : undefined;
   console.error(JSON.stringify({ level: 'ERROR', context, message, stack, ...data, ts: new Date().toISOString() }));
 }
+
+// Dummy handler to satisfy deployment requirements
+Deno.serve(async () => {
+  return new Response("Shared Utils Library", { status: 200 });
+});
