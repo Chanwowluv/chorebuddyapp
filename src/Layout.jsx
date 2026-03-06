@@ -128,7 +128,7 @@ function AppLayout({ children, currentPageName, showOnboarding, setShowOnboardin
     const checkAuth = async () => {
       try {
         const userData = await base44.auth.me();
-        setIsAuthenticated(true);
+        setIsAuthenticated();
         setCurrentUser(userData);
 
         // Check if user needs to complete role selection
