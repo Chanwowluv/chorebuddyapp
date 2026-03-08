@@ -51,8 +51,8 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
           currentWeekAssignments={assignments}
           people={people}
           chores={chores}
-          user={user}
-        />
+          user={user} />
+
       </div>);
 
   }
@@ -65,7 +65,7 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 funky-card p-2 h-auto mb-6">
+        <TabsList className="bg-neutral-50 text-slate-900 mb-6 p-2 rounded-lg items-center justify-center grid w-full grid-cols-4 funky-card h-auto">
           <TabsTrigger
             value="overview"
             className="mx-1 my-1 px-3 py-2 text-sm font-medium funky-button inline-flex items-center justify-center gap-2 whitespace-wrap rounded-sm transition-all data-[state=active]:bg-[#2B59C3] data-[state=active]:text-white">
@@ -109,8 +109,8 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
             people={people}
             completeChore={completeChore}
             user={user}
-            isParent={true}
-          />
+            isParent={true} />
+
         </TabsContent>
 
         <TabsContent value="analytics">
