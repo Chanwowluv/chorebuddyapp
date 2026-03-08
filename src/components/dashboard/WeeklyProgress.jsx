@@ -15,14 +15,14 @@ export default function WeeklyProgress({ assignments = [] }) {
         <h3 className="header-font text-2xl text-[#2B59C3]">Week's Stats</h3>
       </div>
       
-      <div className="w-full bg-gray-200 rounded-full h-6 border-2 border-[#5E3B85]">
-        <div 
+      <div className="bg-violet-50 text-slate-50 rounded-full w-full h-6 border-2 border-[#5E3B85]">
+        <div
           className="bg-[#C3B1E1] h-full rounded-full transition-all duration-1000 flex items-center justify-end pr-2"
-          style={{ width: `${progress}%` }}
-        >
-          {progress > 10 && (
-            <span className="header-font text-white text-sm">{progress}%</span>
-          )}
+          style={{ width: `${progress}%` }}>
+
+          {progress > 10 &&
+          <span className="header-font text-white text-sm">{progress}%</span>
+          }
         </div>
       </div>
       
