@@ -33,7 +33,7 @@ const JOIN_ERROR_MESSAGES = {
   FAMILY_FULL: 'This family is full and cannot accept more members.',
   TIER_LIMIT: "This family has reached its plan's member limit. The family owner needs to upgrade.",
   JOIN_FAILED: 'Failed to join family. Please try again.',
-  SERVER_ERROR: 'Something went wrong. Please try again later.',
+  SERVER_ERROR: 'Something went wrong. Please try again later.'
 };
 
 function getJoinErrorMessage(result) {
@@ -125,7 +125,7 @@ export default function Account() {
           setPeople(familyPeople);
 
           // Find linked person
-          const linked = familyPeople.find(p => p.linked_user_id === userData.id);
+          const linked = familyPeople.find((p) => p.linked_user_id === userData.id);
           setLinkedPerson(linked || null);
         }
       } catch (error) {
@@ -138,7 +138,7 @@ export default function Account() {
   }, []);
 
   const handleToggleChange = (field, value) => {
-    setUser(prev => prev ? { ...prev, [field]: value } : null);
+    setUser((prev) => prev ? { ...prev, [field]: value } : null);
   };
 
   const handleSaveChanges = async () => {
@@ -172,7 +172,7 @@ export default function Account() {
           toast.error('Only parents can update the family name');
           return;
         }
-        
+
         try {
           await base44.entities.Family.update(user.family_id, {
             name: familyName
@@ -183,7 +183,7 @@ export default function Account() {
           throw error;
         }
       }
-      
+
       // Refresh user data to reflect updated family_role in RLS checks
       const updatedUser = await base44.auth.me();
       setUser({
@@ -195,7 +195,7 @@ export default function Account() {
         high_contrast: updatedUser.high_contrast ?? false,
         text_size: updatedUser.text_size ?? 'normal'
       });
-      
+
       toast.success("Preferences saved!");
     } catch (error) {
       toast.error("Failed to save preferences.");
@@ -218,17 +218,17 @@ export default function Account() {
   const handleManageSubscription = async () => {
     setIsPortalRedirecting(true);
     try {
-        const response = await stripeCheckout({ endpoint: 'create-portal-session' });
-        if (response.data?.error) throw new Error(response.data.error);
-        if (response.data?.url) {
-            window.location.href = response.data.url;
-        } else {
-            throw new Error("Could not open customer portal. No URL provided.");
-        }
+      const response = await stripeCheckout({ endpoint: 'create-portal-session' });
+      if (response.data?.error) throw new Error(response.data.error);
+      if (response.data?.url) {
+        window.location.href = response.data.url;
+      } else {
+        throw new Error("Could not open customer portal. No URL provided.");
+      }
     } catch (error) {
-        toast.error(error.message || "Could not connect to subscription manager.");
-        console.error("Error managing subscription:", error);
-        setIsPortalRedirecting(false);
+      toast.error(error.message || "Could not connect to subscription manager.");
+      console.error("Error managing subscription:", error);
+      setIsPortalRedirecting(false);
     }
   };
 
@@ -239,7 +239,7 @@ export default function Account() {
     try {
       const familyPeople = await listForFamily(Person, user.family_id);
       setPeople(familyPeople);
-      const linked = familyPeople.find(p => p.id === personId);
+      const linked = familyPeople.find((p) => p.id === personId);
       setLinkedPerson(linked || null);
       toast.success("Account linked successfully!");
       setLinkModalOpen(false);
@@ -310,7 +310,7 @@ export default function Account() {
     try {
       const result = await familyLinking({
         action: 'join',
-        linkingCode: joinCode.trim(),
+        linkingCode: joinCode.trim()
       });
       if (result.error || result.data?.error) {
         toast.error(getJoinErrorMessage(result));
@@ -337,8 +337,8 @@ export default function Account() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-12 h-12 animate-spin text-[#C3B1E1]" />
-      </div>
-    );
+      </div>);
+
   }
 
   if (!user) {
@@ -346,8 +346,8 @@ export default function Account() {
       <div className="funky-card p-8 text-center">
         <h2 className="header-font text-2xl text-red-600">Could not load user profile.</h2>
         <p className="body-font-light text-gray-600">Please try logging in again.</p>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -357,8 +357,8 @@ export default function Account() {
         onClose={() => setLinkModalOpen(false)}
         people={people}
         onLink={handleLinkAccount}
-        isProcessing={isLinking}
-      />
+        isProcessing={isLinking} />
+
       <div className="mx-4 md:mx-8 lg:mx-24 pb-32 space-y-8 lg:pb-8">
       {/* Header */}
       <div className="funky-card p-6 md:p-8">
@@ -371,9 +371,9 @@ export default function Account() {
             <p className="body-font-light text-gray-600 mt-2">Manage your profile, family, and preferences.</p>
           </div>
           <Button
-            onClick={() => setShowOnboarding(true)}
-            className="funky-button bg-[#C3B1E1] text-white hidden md:flex"
-          >
+              onClick={() => setShowOnboarding(true)}
+              className="funky-button bg-[#C3B1E1] text-white hidden md:flex">
+
             <Sparkles className="w-4 h-4 mr-2" />
             Restart Tour
           </Button>
@@ -381,15 +381,15 @@ export default function Account() {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 funky-card p-2 h-auto">
+        <TabsList className="bg-stone-50 text-muted-foreground p-2 rounded-lg items-center justify-center grid w-full grid-cols-2 md:grid-cols-4 funky-card h-auto">
           <TabsTrigger value="profile" className="mx-3 my-1 px-3 py-1 text-sm font-medium funky-button inline-flex items-center justify-center whitespace-nowrap rounded-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm md:text-base">
             <UserIcon className="w-4 h-4 mr-2" /> Profile
           </TabsTrigger>
-          {isPaidTier && (
+          {isPaidTier &&
             <TabsTrigger value="personalize" className="mx-3 my-1 px-3 py-1 text-sm font-medium funky-button inline-flex items-center justify-center whitespace-nowrap rounded-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm md:text-base">
               <Crown className="w-4 h-4 mr-2" /> Personalize
             </TabsTrigger>
-          )}
+            }
           <TabsTrigger value="preferences" className="mx-3 my-1 px-3 py-1 text-sm font-medium funky-button inline-flex items-center justify-center whitespace-nowrap rounded-sm ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm md:text-base">
             <Bell className="w-4 h-4 mr-2" /> Preferences
           </TabsTrigger>
@@ -409,23 +409,23 @@ export default function Account() {
               <div>
                 <label htmlFor="display-name" className="body-font text-lg text-[#5E3B85] mb-2 block">Name</label>
                 <Input
-                  id="display-name"
-                  value={user.full_name || ''}
-                  onChange={(e) => handleToggleChange('full_name', e.target.value)}
-                  className="funky-button border-3 border-[#5E3B85] body-font bg-white max-w-sm"
-                  maxLength={50}
-                />
+                    id="display-name"
+                    value={user.full_name || ''}
+                    onChange={(e) => handleToggleChange('full_name', e.target.value)}
+                    className="funky-button border-3 border-[#5E3B85] body-font bg-white max-w-sm"
+                    maxLength={50} />
+
               </div>
               <p><strong>Email:</strong> {user.email}</p>
             </div>
             
             <div className="mt-6 pt-6 border-t border-gray-200">
               <label htmlFor="family-role" className="body-font text-lg text-[#5E3B85] mb-4 block">Family Role</label>
-              {checkParent(user) ? (
+              {checkParent(user) ?
                 <Select
                   value={user.family_role || 'parent'}
-                  onValueChange={(value) => handleToggleChange('family_role', value)}
-                >
+                  onValueChange={(value) => handleToggleChange('family_role', value)}>
+
                   <SelectTrigger id="family-role" className="funky-button border-3 border-[#5E3B85] body-font bg-white max-w-xs">
                     <SelectValue placeholder="Select your role..." />
                   </SelectTrigger>
@@ -434,25 +434,25 @@ export default function Account() {
                     <SelectItem value="teen">Teen</SelectItem>
                     <SelectItem value="child">Child</SelectItem>
                   </SelectContent>
-                </Select>
-              ) : (
+                </Select> :
+
                 <div className="funky-button border-3 border-[#5E3B85] body-font bg-gray-50 max-w-xs px-4 py-2 text-gray-700 capitalize">
                   {user.family_role || 'Member'}
                 </div>
-              )}
+                }
               <p className="body-font-light text-sm text-gray-500 mt-2">
-                {checkParent(user)
-                  ? 'As a parent, you have admin access to manage the family'
-                  : 'Your role is managed by a parent. Contact them to change it.'}
+                {checkParent(user) ?
+                  'As a parent, you have admin access to manage the family' :
+                  'Your role is managed by a parent. Contact them to change it.'}
               </p>
             </div>
           </div>
           
           <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-            className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font w-full sm:w-auto mb-6"
-          >
+              onClick={handleSaveChanges}
+              disabled={isSaving}
+              className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font w-full sm:w-auto mb-6">
+
             {isSaving ? 'Saving...' : 'Save Changes'}
           </Button>
           
@@ -470,24 +470,24 @@ export default function Account() {
                     </p>
                     <p className="body-font-light text-sm text-gray-500">Status: <span className="capitalize">{user.subscription_status || 'active'}</span></p>
                 </div>
-                {isChild(user) && linkedPerson ? (
-                    <p className="body-font-light text-gray-600">Your parent manages the subscription. Contact them to upgrade.</p>
-                ) : getEffectiveSubscriptionTier() !== 'free' ? (
-                    <Button 
-                        onClick={handleManageSubscription} 
-                        disabled={isPortalRedirecting}
-                        className="funky-button bg-[#C3B1E1] text-white px-6 py-3 text-lg header-font"
-                    >
+                {isChild(user) && linkedPerson ?
+                <p className="body-font-light text-gray-600">Your parent manages the subscription. Contact them to upgrade.</p> :
+                getEffectiveSubscriptionTier() !== 'free' ?
+                <Button
+                  onClick={handleManageSubscription}
+                  disabled={isPortalRedirecting}
+                  className="funky-button bg-[#C3B1E1] text-white px-6 py-3 text-lg header-font">
+
                         <CreditCard className="w-5 h-5 mr-2" />
                         {isPortalRedirecting ? 'Redirecting...' : 'Manage Subscription'}
-                    </Button>
-                ) : (
-                    <Link to={createPageUrl("Pricing")}>
+                    </Button> :
+
+                <Link to={createPageUrl("Pricing")}>
                       <Button className="funky-button bg-green-500 text-white px-6 py-3 text-lg header-font">
                           Upgrade Plan
                       </Button>
                     </Link>
-                )}
+                }
             </div>
             <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-200">
                 <label className="body-font text-lg text-[#5E3B85]">Logout</label>
@@ -509,8 +509,8 @@ export default function Account() {
                   </div>
                   <Button
                     onClick={() => setShowDeleteAccountConfirm(true)}
-                    className="funky-button bg-red-600 hover:bg-red-700 text-white px-6 py-3 header-font flex-shrink-0"
-                  >
+                    className="funky-button bg-red-600 hover:bg-red-700 text-white px-6 py-3 header-font flex-shrink-0">
+
                     <Trash2 className="w-4 h-4 mr-2" />
                     Delete Account
                   </Button>
@@ -524,8 +524,8 @@ export default function Account() {
                 title="Delete Account"
                 message="This will permanently delete your account and all your data, including chore history, achievements, and family connections. This action cannot be undone."
                 confirmText="Delete My Account"
-                variant="destructive"
-              />
+                variant="destructive" />
+
           </div>
         </TabsContent>
 
@@ -558,10 +558,10 @@ export default function Account() {
                   <p className="body-font-light text-sm text-gray-600">Let ChoreAI automatically assign chores to you</p>
                 </label>
                 <Switch
-                  id="auto-assign-chores"
-                  checked={chorePreferences.auto_assign_enabled}
-                  onCheckedChange={(value) => setChorePreferences({ ...chorePreferences, auto_assign_enabled: value })}
-                />
+                    id="auto-assign-chores"
+                    checked={chorePreferences.auto_assign_enabled}
+                    onCheckedChange={(value) => setChorePreferences({ ...chorePreferences, auto_assign_enabled: value })} />
+
               </div>
 
               <div className="flex items-center justify-between p-4 funky-card border-2 border-dashed bg-white/50">
@@ -570,19 +570,19 @@ export default function Account() {
                   <p className="body-font-light text-sm text-gray-600">Prefer chores on weekdays when possible</p>
                 </label>
                 <Switch
-                  id="avoid-weekend-chores"
-                  checked={chorePreferences.avoid_weekends}
-                  onCheckedChange={(value) => setChorePreferences({ ...chorePreferences, avoid_weekends: value })}
-                />
+                    id="avoid-weekend-chores"
+                    checked={chorePreferences.avoid_weekends}
+                    onCheckedChange={(value) => setChorePreferences({ ...chorePreferences, avoid_weekends: value })} />
+
               </div>
             </div>
           </div>
 
           <Button
-            onClick={handleSaveChanges}
-            disabled={isSaving}
-            className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font w-full sm:w-auto"
-          >
+              onClick={handleSaveChanges}
+              disabled={isSaving}
+              className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font w-full sm:w-auto">
+
             {isSaving ? 'Saving...' : 'Save All Changes'}
           </Button>
         </TabsContent>
@@ -592,13 +592,13 @@ export default function Account() {
           <div className="funky-card p-8 mb-6">
             <h2 className="header-font text-3xl text-[#2B59C3] mb-6">Accessibility</h2>
             <AccessibilitySettings
-              simplifiedView={user.simplified_view}
-              onSimplifiedViewChange={(value) => handleToggleChange('simplified_view', value)}
-              highContrast={user.high_contrast}
-              onHighContrastChange={(value) => handleToggleChange('high_contrast', value)}
-              textSize={user.text_size}
-              onTextSizeChange={(value) => handleToggleChange('text_size', value)}
-            />
+                simplifiedView={user.simplified_view}
+                onSimplifiedViewChange={(value) => handleToggleChange('simplified_view', value)}
+                highContrast={user.high_contrast}
+                onHighContrastChange={(value) => handleToggleChange('high_contrast', value)}
+                textSize={user.text_size}
+                onTextSizeChange={(value) => handleToggleChange('text_size', value)} />
+
           </div>
 
           {/* Notification Preferences */}
@@ -606,12 +606,12 @@ export default function Account() {
             <h2 className="header-font text-3xl text-[#2B59C3] mb-6">Notification Preferences</h2>
             <div className="space-y-6">
               
-              {isPaidTier ? (
+              {isPaidTier ?
                 <NotificationPreferences
                   preferences={notificationPreferences}
-                  onChange={setNotificationPreferences}
-                />
-              ) : (
+                  onChange={setNotificationPreferences} /> :
+
+
                 <>
                   <div className="flex items-center justify-between p-4 funky-card border-2 border-dashed bg-white/50">
                     <label htmlFor="chore-reminders" className="flex-1 cursor-pointer">
@@ -621,8 +621,8 @@ export default function Account() {
                     <Switch
                       id="chore-reminders"
                       checked={user.receives_chore_reminders}
-                      onCheckedChange={(value) => handleToggleChange('receives_chore_reminders', value)}
-                    />
+                      onCheckedChange={(value) => handleToggleChange('receives_chore_reminders', value)} />
+
                   </div>
                   <div className="flex items-center justify-between p-4 funky-card border-2 border-dashed bg-white/50">
                     <label htmlFor="achievement-alerts" className="flex-1 cursor-pointer">
@@ -632,8 +632,8 @@ export default function Account() {
                     <Switch
                       id="achievement-alerts"
                       checked={user.receives_achievement_alerts}
-                      onCheckedChange={(value) => handleToggleChange('receives_achievement_alerts', value)}
-                    />
+                      onCheckedChange={(value) => handleToggleChange('receives_achievement_alerts', value)} />
+
                   </div>
                   <div className="flex items-center justify-between p-4 funky-card border-2 border-dashed bg-white/50">
                     <label htmlFor="weekly-reports" className="flex-1 cursor-pointer">
@@ -643,17 +643,17 @@ export default function Account() {
                     <Switch
                       id="weekly-reports"
                       checked={user.receives_weekly_reports}
-                      onCheckedChange={(value) => handleToggleChange('receives_weekly_reports', value)}
-                    />
+                      onCheckedChange={(value) => handleToggleChange('receives_weekly_reports', value)} />
+
                   </div>
                 </>
-              )}
+                }
             </div>
             <Button
-              onClick={handleSaveChanges}
-              disabled={isSaving}
-              className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font mt-6 w-full sm:w-auto"
-            >
+                onClick={handleSaveChanges}
+                disabled={isSaving}
+                className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font mt-6 w-full sm:w-auto">
+
               {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
@@ -661,8 +661,8 @@ export default function Account() {
 
         <TabsContent value="family" className="mt-6">
            {/* Family Name (Parents Only) */}
-           {checkParent(user) && (
-             <div className="funky-card p-8 mb-6">
+           {checkParent(user) &&
+            <div className="funky-card p-8 mb-6">
                <h2 className="header-font text-3xl text-[#2B59C3] mb-6 flex items-center gap-3">
                  <Users className="w-8 h-8 text-[#F7A1C4]" />
                  Family Name
@@ -673,25 +673,25 @@ export default function Account() {
                      Your Family Name
                    </label>
                    <input
-                     id="family-name"
-                     type="text"
-                     placeholder="e.g., The Smith Family"
-                     value={familyName}
-                     onChange={(e) => setFamilyName(e.target.value)}
-                     className="funky-button border-3 border-[#5E3B85] w-full px-4 py-3 body-font text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#C3B1E1]"
-                     maxLength="50"
-                   />
+                    id="family-name"
+                    type="text"
+                    placeholder="e.g., The Smith Family"
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                    className="funky-button border-3 border-[#5E3B85] w-full px-4 py-3 body-font text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#C3B1E1]"
+                    maxLength="50" />
+
                    <p className="body-font-light text-sm text-gray-500 mt-2">
                      This name will help family members identify your family when joining. Keep it memorable!
                    </p>
                  </div>
                </div>
              </div>
-           )}
+            }
 
            {/* Family Linking Code (Parents Only) */}
-           {checkParent(user) && (
-             <div className="funky-card p-8 mb-6">
+           {checkParent(user) &&
+            <div className="funky-card p-8 mb-6">
                <h2 className="header-font text-3xl text-[#2B59C3] mb-6 flex items-center gap-3">
                  <Link2 className="w-8 h-8 text-[#C3B1E1]" />
                  Family Linking Code
@@ -702,8 +702,8 @@ export default function Account() {
                    Share this code with family members so they can join your household on their own device.
                  </p>
 
-                 {linkingCode && !isCodeExpired ? (
-                   <>
+                 {linkingCode && !isCodeExpired ?
+                <>
                      <div className="flex justify-center mb-4">
                        <div className="bg-white rounded-xl px-6 py-4 border-3 border-[#5E3B85] shadow-md">
                          <span className="header-font text-3xl md:text-4xl tracking-[0.3em] text-[#2B59C3]">
@@ -714,61 +714,61 @@ export default function Account() {
 
                      <div className="flex justify-center gap-3 mb-4">
                        <Button
-                         onClick={copyLinkingCode}
-                         className="funky-button bg-[#2B59C3] text-white"
-                       >
-                         {codeCopied ? (
-                           <>
+                      onClick={copyLinkingCode}
+                      className="funky-button bg-[#2B59C3] text-white">
+
+                         {codeCopied ?
+                      <>
                              <Check className="w-4 h-4 mr-2" />
                              Copied!
-                           </>
-                         ) : (
-                           <>
+                           </> :
+
+                      <>
                              <Copy className="w-4 h-4 mr-2" />
                              Copy Code
                            </>
-                         )}
+                      }
                        </Button>
                        <Button
-                         onClick={() => setShowRegenerateConfirm(true)}
-                         disabled={isGeneratingCode}
-                         variant="outline"
-                         className="funky-button border-2 border-[#5E3B85]"
-                       >
-                         {isGeneratingCode ? (
-                           <Loader2 className="w-4 h-4 animate-spin" />
-                         ) : (
-                           <>
+                      onClick={() => setShowRegenerateConfirm(true)}
+                      disabled={isGeneratingCode}
+                      variant="outline"
+                      className="funky-button border-2 border-[#5E3B85]">
+
+                         {isGeneratingCode ?
+                      <Loader2 className="w-4 h-4 animate-spin" /> :
+
+                      <>
                              <RefreshCw className="w-4 h-4 mr-2" />
                              Regenerate
                            </>
-                         )}
+                      }
                        </Button>
                      </div>
 
-                     {codeExpiry && (
-                       <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                     {codeExpiry &&
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
                          <Clock className="w-4 h-4" />
                          <span>Expires in {formatExpiry(codeExpiry)}</span>
                        </div>
-                     )}
-                   </>
-                 ) : (
-                   <div className="text-center">
+                  }
+                   </> :
+
+                <div className="text-center">
                      <Button
-                       onClick={generateOrRegenerateCode}
-                       disabled={isGeneratingCode}
-                       className="funky-button bg-[#2B59C3] text-white px-8 py-4 text-lg"
-                     >
-                       {isGeneratingCode ? (
-                         <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                       ) : (
-                         <Sparkles className="w-5 h-5 mr-2" />
-                       )}
+                    onClick={generateOrRegenerateCode}
+                    disabled={isGeneratingCode}
+                    className="funky-button bg-[#2B59C3] text-white px-8 py-4 text-lg">
+
+                       {isGeneratingCode ?
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> :
+
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    }
                        Generate Linking Code
                      </Button>
                    </div>
-                 )}
+                }
                </div>
 
                <div className="flex items-start gap-3 p-4 mt-4 bg-amber-50 border-2 border-amber-200 rounded-xl">
@@ -779,8 +779,8 @@ export default function Account() {
                </div>
 
                {/* Upgrade CTA for free-tier parents */}
-               {(family?.subscription_tier || 'free') === 'free' && (
-                 <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl flex items-center gap-3">
+               {(family?.subscription_tier || 'free') === 'free' &&
+              <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl flex items-center gap-3">
                    <Zap className="w-5 h-5 text-amber-600 flex-shrink-0" />
                    <div className="flex-1">
                      <p className="body-font text-sm text-amber-800">
@@ -794,23 +794,23 @@ export default function Account() {
                      </Button>
                    </Link>
                  </div>
-               )}
+              }
              </div>
-           )}
+            }
 
            <ConfirmDialog
-             isOpen={showRegenerateConfirm}
-             onClose={() => setShowRegenerateConfirm(false)}
-             onConfirm={generateOrRegenerateCode}
-             title="Regenerate Linking Code?"
-             message="This will invalidate the current code. Anyone who hasn't used it yet will need the new code."
-             confirmText="Regenerate"
-             variant="warning"
-           />
+              isOpen={showRegenerateConfirm}
+              onClose={() => setShowRegenerateConfirm(false)}
+              onConfirm={generateOrRegenerateCode}
+              title="Regenerate Linking Code?"
+              message="This will invalidate the current code. Anyone who hasn't used it yet will need the new code."
+              confirmText="Regenerate"
+              variant="warning" />
+
 
            {/* Child/Teen Join Family Code Entry */}
-           {isChild(user) && !user.family_id && (
-             <div className="funky-card p-8 mb-6">
+           {isChild(user) && !user.family_id &&
+            <div className="funky-card p-8 mb-6">
                <h2 className="header-font text-3xl text-[#2B59C3] mb-6 flex items-center gap-3">
                  <Users className="w-8 h-8 text-[#F7A1C4]" />
                  Join a Family
@@ -820,33 +820,33 @@ export default function Account() {
                </p>
                <div className="space-y-4">
                  <Input
-                   value={joinCode}
-                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                   placeholder="XXXXXX"
-                   maxLength={6}
-                   className="text-center header-font text-2xl tracking-[0.3em] py-4 border-3 border-[#5E3B85] rounded-xl uppercase"
-                   disabled={isJoiningFamily}
-                 />
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  placeholder="XXXXXX"
+                  maxLength={6}
+                  className="text-center header-font text-2xl tracking-[0.3em] py-4 border-3 border-[#5E3B85] rounded-xl uppercase"
+                  disabled={isJoiningFamily} />
+
                  <Button
-                   onClick={handleJoinFamilyWithCode}
-                   disabled={isJoiningFamily || joinCode.length < 6}
-                   className="w-full funky-button bg-[#2B59C3] text-white py-3 text-lg header-font"
-                 >
-                   {isJoiningFamily ? (
-                     <>
+                  onClick={handleJoinFamilyWithCode}
+                  disabled={isJoiningFamily || joinCode.length < 6}
+                  className="w-full funky-button bg-[#2B59C3] text-white py-3 text-lg header-font">
+
+                   {isJoiningFamily ?
+                  <>
                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
                        Joining...
-                     </>
-                   ) : (
-                     <>
+                     </> :
+
+                  <>
                        <Users className="w-5 h-5 mr-2" />
                        Join Family
                      </>
-                   )}
+                  }
                  </Button>
                </div>
              </div>
-           )}
+            }
 
            {/* Account Linking */}
            <div className="funky-card p-8 mb-6">
@@ -855,7 +855,7 @@ export default function Account() {
               Account Linking
             </h2>
             
-            {linkedPerson ? (
+            {linkedPerson ?
               <div className="bg-green-50 border-2 border-green-300 rounded-lg p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
@@ -872,8 +872,8 @@ export default function Account() {
                     </p>
                   </div>
                 </div>
-              </div>
-            ) : (
+              </div> :
+
               <div className="bg-orange-50 border-2 border-orange-300 rounded-lg p-6">
                 <div className="flex items-start gap-3 mb-4">
                   <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
@@ -886,27 +886,27 @@ export default function Account() {
                     </p>
                     <Button
                       onClick={() => setLinkModalOpen(true)}
-                      className="funky-button bg-[#2B59C3] text-white border-2 border-[#5E3B85]"
-                    >
+                      className="funky-button bg-[#2B59C3] text-white border-2 border-[#5E3B85]">
+
                       <Link2 className="w-4 h-4 mr-2" />
                       Link My Account
                     </Button>
                   </div>
                 </div>
               </div>
-            )}
+              }
           </div>
 
           {/* Save Changes Button (for Family Name) */}
-          {checkParent(user) && (
+          {checkParent(user) &&
             <Button
               onClick={handleSaveChanges}
               disabled={isSaving}
-              className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font mb-6"
-            >
+              className="funky-button bg-[#5E3B85] text-white px-6 py-3 text-lg header-font mb-6">
+
               {isSaving ? 'Saving...' : 'Save Family Name'}
             </Button>
-          )}
+            }
 
           {/* Family Management */}
           <div className="funky-card p-8 text-center">
@@ -927,19 +927,19 @@ export default function Account() {
       {/* Mobile restart tour button */}
       <div className="md:hidden fixed bottom-20 right-4 z-40">
         <Button
-          onClick={() => setShowOnboarding(true)}
-          className="funky-button bg-[#C3B1E1] text-white shadow-lg"
-        >
+            onClick={() => setShowOnboarding(true)}
+            className="funky-button bg-[#C3B1E1] text-white shadow-lg">
+
           <Sparkles className="w-4 h-4 mr-2" />
           Restart Tour
         </Button>
       </div>
       </div>
 
-      <OnboardingTour 
-        isOpen={showOnboarding} 
-        onClose={() => setShowOnboarding(false)} 
-      />
-    </>
-  );
+      <OnboardingTour
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)} />
+
+    </>);
+
 }
