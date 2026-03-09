@@ -8,6 +8,7 @@ import {
   Megaphone, MoreHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
 import PublicLayout from "./components/layout/PublicLayout";
 import CookieBanner from "./components/ui/CookieBanner";
 import RealTimeBadge from "./components/ui/RealTimeBadge";
@@ -40,7 +41,7 @@ const navigationItems = [
     title: "Family",
     url: createPageUrl("People"),
     icon: Users,
-    color: "bg-[#F7A1C4] text-pink-800",
+    color: "bg-[#F7A1C4] text-pink-900",
     hover: "hover:bg-[#f590b8]",
     active: "bg-[#f590b8]",
     visibleTo: ["parent"],
@@ -50,9 +51,9 @@ const navigationItems = [
     title: "Chores",
     url: createPageUrl("Chores"),
     icon: ClipboardList,
-    color: "bg-[#FF6B35] text-white",
-    hover: "hover:bg-[#fa5a1f]",
-    active: "bg-[#fa5a1f]",
+    color: "bg-[#E05624] text-white",
+    hover: "hover:bg-[#C94518]",
+    active: "bg-[#C94518]",
     visibleTo: ALL_ROLES,
     mobileOrder: 3,
   },
@@ -60,9 +61,9 @@ const navigationItems = [
     title: "Schedule",
     url: createPageUrl("Schedule"),
     icon: Calendar,
-    color: "bg-[#C3B1E1] text-white",
-    hover: "hover:bg-[#b19dcb]",
-    active: "bg-[#b19dcb]",
+    color: "bg-[#9F87D6] text-white",
+    hover: "hover:bg-[#8A6FD6]",
+    active: "bg-[#8A6FD6]",
     visibleTo: ALL_ROLES,
     mobileOrder: 4,
   },
@@ -80,9 +81,9 @@ const navigationItems = [
     title: "Messages",
     url: createPageUrl("Messages"),
     icon: MessageCircle,
-    color: "bg-[#C3B1E1] text-white",
-    hover: "hover:bg-[#b19dcb]",
-    active: "bg-[#b19dcb]",
+    color: "bg-[#9F87D6] text-white",
+    hover: "hover:bg-[#8A6FD6]",
+    active: "bg-[#8A6FD6]",
     visibleTo: ALL_ROLES,
     mobileOrder: 6,
   },
@@ -90,9 +91,9 @@ const navigationItems = [
     title: "Calendar",
     url: createPageUrl("FamilyCalendar"),
     icon: Calendar,
-    color: "bg-[#FF6B35] text-white",
-    hover: "hover:bg-[#fa5a1f]",
-    active: "bg-[#fa5a1f]",
+    color: "bg-[#E05624] text-white",
+    hover: "hover:bg-[#C94518]",
+    active: "bg-[#C94518]",
     visibleTo: ALL_ROLES,
     mobileOrder: 7,
   },
@@ -100,7 +101,7 @@ const navigationItems = [
     title: "Notices",
     url: createPageUrl("NoticeBoard"),
     icon: Megaphone,
-    color: "bg-[#F7A1C4] text-pink-800",
+    color: "bg-[#F7A1C4] text-pink-900",
     hover: "hover:bg-[#f590b8]",
     active: "bg-[#f590b8]",
     visibleTo: ALL_ROLES,
@@ -202,7 +203,7 @@ function MobileNavItem({ item, isActive, onClick }) {
       >
         <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
       </div>
-      <span className="text-[10px] body-font text-[#5E3B85] leading-tight">
+      <span className="text-sm body-font text-[#5E3B85] leading-tight">
         {item.title}
       </span>
     </button>
@@ -225,7 +226,7 @@ function MobileMoreMenu({ items, location, navigate }) {
         <div className="funky-button w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-gray-200 text-gray-700">
           <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7" />
         </div>
-        <span className="text-[10px] body-font text-[#5E3B85] leading-tight">
+        <span className="text-sm body-font text-[#5E3B85] leading-tight">
           More
         </span>
       </button>
@@ -414,6 +415,36 @@ function AppLayout({
   const [currentUser, setCurrentUser] = useState(null);
 
   const isPublicPage = PUBLIC_PAGES.includes(currentPageName);
+  
+  // Transition direction logic
+  const prevPathRef = useRef(location.pathname);
+  const directionRef = useRef(0);
+
+  // Define root paths for transition logic
+  const rootPaths = useMemo(() => {
+    const allItems = [...navigationItems, ...adminNavigationItems, ...utilityNavItems];
+    return new Set(allItems.map(item => item.url).concat(['/']));
+  }, []);
+
+  useEffect(() => {
+    const prevPath = prevPathRef.current;
+    if (prevPath !== location.pathname) {
+      const isCurrentRoot = rootPaths.has(location.pathname);
+      const isPrevRoot = rootPaths.has(prevPath);
+
+      if (isCurrentRoot && isPrevRoot) {
+        directionRef.current = 0; // Fade
+      } else if (!isCurrentRoot && isPrevRoot) {
+        directionRef.current = 1; // Push (Right to Left)
+      } else if (isCurrentRoot && !isPrevRoot) {
+        directionRef.current = -1; // Pop (Left to Right)
+      } else {
+        // Deeper navigation or sibling
+        directionRef.current = 1; 
+      }
+      prevPathRef.current = location.pathname;
+    }
+  }, [location.pathname, rootPaths]);
 
   // ── Auth check ────────────────────────────────────────────────────────────
 
@@ -577,14 +608,30 @@ function AppLayout({
         {/* ── Main Content ─────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
           <MobileHeader currentPageName={currentPageName} />
-          <div className="pt-mobile-header lg:pt-0">
-            <AnimatePresence mode="wait">
+          <div className="pt-mobile-header lg:pt-0 overflow-x-hidden">
+            <AnimatePresence mode="popLayout" custom={directionRef.current}>
               <motion.div
                 key={location.pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
+                custom={directionRef.current}
+                initial={(dir) => ({
+                  x: dir === 0 ? 0 : dir > 0 ? '100%' : '-20%',
+                  opacity: dir === 0 ? 0 : 1,
+                  position: 'absolute',
+                  width: '100%'
+                })}
+                animate={{ 
+                  x: 0, 
+                  opacity: 1,
+                  position: 'relative' 
+                }}
+                exit={(dir) => ({
+                  x: dir === 0 ? 0 : dir > 0 ? '-20%' : '100%',
+                  opacity: 0,
+                  position: 'absolute',
+                  width: '100%'
+                })}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="w-full"
               >
                 {children}
               </motion.div>
