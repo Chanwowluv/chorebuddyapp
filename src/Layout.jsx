@@ -7,6 +7,7 @@ import {
   Settings, Loader2, Target, CheckCircle, MessageCircle,
   Megaphone, MoreHorizontal,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import PublicLayout from "./components/layout/PublicLayout";
 import CookieBanner from "./components/ui/CookieBanner";
 import RealTimeBadge from "./components/ui/RealTimeBadge";
@@ -159,6 +160,13 @@ const utilityNavItems = [
   },
 ];
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const isItemActive = (itemUrl, currentPath) => {
+  if (itemUrl === '/') return currentPath === '/';
+  return currentPath === itemUrl || currentPath.startsWith(`${itemUrl}/`);
+};
+
 // ─── Tier display mapping ────────────────────────────────────────────────────
 
 const TIER_LABELS = {
@@ -232,7 +240,7 @@ function MobileMoreMenu({ items, location, navigate }) {
           {/* Menu */}
           <div className="absolute bottom-full right-0 mb-2 z-50 bg-white border-3 border-[#5E3B85] rounded-2xl shadow-lg p-2 min-w-[160px]">
             {items.map((item) => {
-              const isActive = location.pathname === item.url;
+              const isActive = isItemActive(item.url, location.pathname);
               return (
                 <button
                   key={item.title}
@@ -471,7 +479,7 @@ function AppLayout({
 
   const handleMobileNavClick = useCallback(
     (item) => {
-      const isActive = location.pathname === item.url;
+      const isActive = isItemActive(item.url, location.pathname);
       if (isActive) {
         navigate(item.url, { replace: true });
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -548,7 +556,7 @@ function AppLayout({
                 <SidebarNavItem
                   key={item.title}
                   item={item}
-                  isActive={location.pathname === item.url}
+                  isActive={isItemActive(item.url, location.pathname)}
                 />
               ))}
 
@@ -558,7 +566,7 @@ function AppLayout({
                   <SidebarNavItem
                     key={item.title}
                     item={item}
-                    isActive={location.pathname === item.url}
+                    isActive={isItemActive(item.url, location.pathname)}
                   />
                 ))}
               </div>
@@ -569,7 +577,19 @@ function AppLayout({
         {/* ── Main Content ─────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
           <MobileHeader currentPageName={currentPageName} />
-          <div className="pt-mobile-header lg:pt-0">{children}</div>
+          <div className="pt-mobile-header lg:pt-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -584,7 +604,7 @@ function AppLayout({
             <MobileNavItem
               key={item.title}
               item={item}
-              isActive={location.pathname === item.url}
+              isActive={isItemActive(item.url, location.pathname)}
               onClick={() => handleMobileNavClick(item)}
             />
           ))}
@@ -594,8 +614,15 @@ function AppLayout({
             <MobileNavItem
               key={item.title}
               item={item}
-              isActive={location.pathname === item.url}
-              onClick={() => navigate(item.url)}
+              isActive={isItemActive(item.url, location.pathname)}
+              onClick={() => {
+                if (isItemActive(item.url, location.pathname)) {
+                  navigate(item.url, { replace: true });
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  navigate(item.url);
+                }
+              }}
             />
           ))}
 
