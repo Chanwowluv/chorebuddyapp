@@ -17,8 +17,8 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@base44/sdk": "^0.8.3",
-    "@base44/vite-plugin": "^0.2.14",
+    "@base44/sdk": "^0.8.0",
+    "@base44/vite-plugin": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
     "@radix-ui/react-aspect-ratio": "^1.1.2",
