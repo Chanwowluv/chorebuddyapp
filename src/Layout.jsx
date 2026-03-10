@@ -614,7 +614,7 @@ function AppLayout({
                 key={location.pathname}
                 custom={directionRef.current}
                 initial={(dir) => ({
-                  x: dir === 0 ? 0 : dir > 0 ? '100%' : '-20%',
+                  x: dir === 0 ? 0 : dir > 0 ? '20%' : '-20%',
                   opacity: dir === 0 ? 0 : 1,
                   position: 'absolute',
                   width: '100%'
@@ -625,7 +625,7 @@ function AppLayout({
                   position: 'relative' 
                 }}
                 exit={(dir) => ({
-                  x: dir === 0 ? 0 : dir > 0 ? '-20%' : '100%',
+                  x: dir === 0 ? 0 : dir > 0 ? '-20%' : '20%',
                   opacity: 0,
                   position: 'absolute',
                   width: '100%'
