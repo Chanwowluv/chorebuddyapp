@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Mail, Link as LinkIcon, Copy } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from "sonner";
+import { generateLinkingCode } from '@/utils/familyLinkingClient';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format } from 'date-fns';
@@ -24,15 +25,14 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
   const handleGenerateLinkingCode = async () => {
     setIsGeneratingCode(true);
     try {
-      const result = await base44.functions.invoke('inviteFamilyMember', { generateLinkingCode: true });
-
-      if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to generate linking code');
+      const user = await base44.auth.me();
+      if (!user?.family_id) {
+        toast.error('No family found. Please refresh the page.');
         return;
       }
-
-      setGeneratedLinkingCode(result.data.linkingCode);
-      setLinkingCodeExpiry(result.data.linkingCodeExpires);
+      const result = await generateLinkingCode(user.family_id);
+      setGeneratedLinkingCode(result.linkingCode);
+      setLinkingCodeExpiry(result.expiresAt);
       toast.success('Linking code generated successfully!');
     } catch (error) {
       console.error('Error generating linking code:', error);
@@ -51,27 +51,7 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.email.trim() || !formData.name.trim()) return;
-
-    setIsInviting(true);
-    try {
-      const result = await base44.functions.invoke('inviteFamilyMember', formData);
-
-      if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to send invitation');
-        return;
-      }
-      
-      toast.success('Family invitation sent successfully!');
-      setFormData({ email: '', name: '', role: 'child' });
-      onSuccess?.();
-      onClose();
-    } catch (error) {
-      console.error('Error sending invitation:', error);
-      toast.error(error?.message || 'Failed to send invitation. Please try again.');
-    } finally {
-      setIsInviting(false);
-    }
+    toast.error('Email invitations require backend functions. Please use the Linking Code tab to share a code manually.');
   };
 
   const handleClose = () => {

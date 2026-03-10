@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useReducer } from "react";
-import { smartAssignChores } from "@/functions/smartAssignChores";
+import { smartAssignChores } from "@/utils/smartAssignClient";
 import { format, startOfWeek } from "date-fns";
 import { useData } from "../components/contexts/DataContext";
 import { toast } from "sonner";
@@ -15,7 +15,6 @@ import ParentDashboard from "../components/dashboard/ParentDashboard";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import ChoresSection from "../components/dashboard/ChoresSection";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
-import { Loader2 } from "lucide-react";
 import { isParent as checkParent, isChild as checkChild } from "@/utils/roles";
 import ErrorBoundaryWithRetry from "../components/ui/ErrorBoundaryWithRetry";
 import PullToRefresh from "../components/ui/PullToRefresh";

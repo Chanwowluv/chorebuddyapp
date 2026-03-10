@@ -6,8 +6,7 @@ import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { Users, Baby, Sparkles, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { familyLinking } from '@/functions/familyLinking';
-import { stripeCheckout } from '@/functions/stripeCheckout';
+import { generateLinkingCode } from '@/utils/familyLinkingClient';
 
 export default function RoleSelection() {
   const navigate = useNavigate();
@@ -86,7 +85,7 @@ export default function RoleSelection() {
 
         // Auto-generate a linking code so parents always have one ready
         try {
-          await familyLinking({ action: 'generate', familyId: family.id });
+          await generateLinkingCode(family.id);
         } catch (e) {
           // Non-critical: family still created, code can be generated later
           console.error('Failed to auto-generate linking code:', e);
@@ -100,9 +99,10 @@ export default function RoleSelection() {
         });
       }
 
-      // Auto-create Stripe customer so stripe_customer_id is available from day one
+      // Stripe customer creation skipped - requires backend functions
       try {
-        await stripeCheckout({ endpoint: 'create-customer' });
+        // stripeCheckout requires backend functions; skip gracefully
+        console.log('[RoleSelection] Stripe customer creation skipped (backend functions unavailable)');
       } catch (e) {
         // Non-critical: user can still use the app; customer created on checkout if needed
         console.error('Failed to create Stripe customer at signup:', e);

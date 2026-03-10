@@ -11,8 +11,7 @@ import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, A
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { stripeCheckout } from '@/functions/stripeCheckout';
-import { familyLinking } from '@/functions/familyLinking';
+import { generateLinkingCode, joinFamilyByCode } from '@/utils/familyLinkingClient';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LinkAccountModal from '@/components/people/LinkAccountModal';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
@@ -216,20 +215,7 @@ export default function Account() {
   };
 
   const handleManageSubscription = async () => {
-    setIsPortalRedirecting(true);
-    try {
-      const response = await stripeCheckout({ endpoint: 'create-portal-session' });
-      if (response.data?.error) throw new Error(response.data.error);
-      if (response.data?.url) {
-        window.location.href = response.data.url;
-      } else {
-        throw new Error("Could not open customer portal. No URL provided.");
-      }
-    } catch (error) {
-      toast.error(error.message || "Could not connect to subscription manager.");
-      console.error("Error managing subscription:", error);
-      setIsPortalRedirecting(false);
-    }
+    toast.error("Subscription management is currently unavailable. Please contact support to manage your plan.");
   };
 
   const handleLinkAccount = async (personId) => {
@@ -259,24 +245,13 @@ export default function Account() {
     }
     setIsGeneratingCode(true);
     try {
-      const result = await familyLinking({
-        action: 'generate',
-        familyId
-      });
-      if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to generate code');
-        return;
-      }
-      if (result.data?.success) {
-        setLinkingCode(result.data.linkingCode);
-        setCodeExpiry(result.data.expiresAt);
-        toast.success('Linking code generated!');
-      } else {
-        toast.error('Failed to generate code');
-      }
+      const result = await generateLinkingCode(familyId);
+      setLinkingCode(result.linkingCode);
+      setCodeExpiry(result.expiresAt);
+      toast.success('Linking code generated!');
     } catch (error) {
       console.error('Error generating linking code:', error);
-      toast.error('Failed to generate linking code');
+      toast.error(error.message || 'Failed to generate linking code');
     } finally {
       setIsGeneratingCode(false);
       setShowRegenerateConfirm(false);
@@ -308,24 +283,12 @@ export default function Account() {
     }
     setIsJoiningFamily(true);
     try {
-      const result = await familyLinking({
-        action: 'join',
-        linkingCode: joinCode.trim()
-      });
-      if (result.error || result.data?.error) {
-        toast.error(getJoinErrorMessage(result));
-        return;
-      }
-      if (result.data?.success) {
-        toast.success(`Welcome to ${result.data.familyName}!`);
-        // Reload page to reflect new family state
-        window.location.reload();
-      } else {
-        toast.error('Failed to join family');
-      }
+      const result = await joinFamilyByCode({ linkingCode: joinCode.trim() });
+      toast.success(`Welcome to ${result.familyName}!`);
+      window.location.reload();
     } catch (error) {
       console.error('Error joining family:', error);
-      toast.error(getJoinErrorMessage(error) || 'Failed to join family. Please check your code.');
+      toast.error(error.message || 'Failed to join family. Please check your code.');
     } finally {
       setIsJoiningFamily(false);
     }

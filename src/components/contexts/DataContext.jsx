@@ -422,17 +422,41 @@ export const DataProvider = ({ children }) => {
   }, [user]);
 
   /**
-   * Invoke the parentCrud serverless function for parent-only CRUD operations.
-   * This enforces parent role, entity whitelist, and family ownership at the
-   * API level (server-side), not just in the client.
+   * Client-side parent CRUD operations.
+   * Replaces the parentCrud serverless function with direct Base44 entity
+   * operations. Enforces parent role and entity whitelist on the client;
+   * Base44 RLS provides additional server-side access control.
    */
   const invokeParentCrud = useCallback(async (entity, operation, data = null, id = null) => {
-    const result = await base44.functions.invoke('parentCrud', { entity, operation, data, id });
-    if (result.error || result.data?.error) {
-      throw new Error(result.error || result.data?.error || 'Operation failed');
+    requireParentRole();
+    const familyId = await ensureFamily();
+
+    const ALLOWED = {
+      Person: ['create', 'update', 'delete'],
+      Chore: ['create', 'update', 'delete'],
+      Assignment: ['create', 'delete'],
+      RedeemableItem: ['create', 'update', 'delete'],
+      FamilyGoal: ['create', 'update', 'delete'],
+    };
+
+    if (!ALLOWED[entity]?.includes(operation)) {
+      throw new Error(`Operation '${operation}' not allowed on '${entity}'`);
     }
-    return result.data.record;
-  }, []);
+
+    const entityApi = base44.entities[entity];
+
+    switch (operation) {
+      case 'create':
+        return entityApi.create({ ...data, family_id: familyId, created_by: user?.id });
+      case 'update':
+        return entityApi.update(id, data);
+      case 'delete':
+        await entityApi.delete(id);
+        return { deleted: true, id };
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
+    }
+  }, [user, requireParentRole, ensureFamily]);
 
   // ==========================================
   // PERSON ACTIONS
