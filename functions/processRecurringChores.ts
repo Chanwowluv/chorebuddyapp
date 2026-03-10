@@ -1,27 +1,30 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
-import { isParent, getUserFamilyId } from './lib/shared-utils.ts';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-
-    if (!user || !isParent(user)) {
-      return Response.json(
-        { error: 'Forbidden: Parent access required' },
-        { status: 403 }
-      );
+    
+    // Check if called by a user (manual trigger) or by automation
+    let familyIdFilter = null;
+    try {
+      const user = await base44.auth.me();
+      if (user) {
+        if (user.family_role !== 'parent') {
+          return Response.json({ error: 'Forbidden: Parent access required' }, { status: 403 });
+        }
+        familyIdFilter = user.family_id;
+      }
+    } catch (e) {
+      // No user found, assume it's an automation running via service role
     }
 
-    // Get recurring chores scoped to the parent's family
-    const familyId = getUserFamilyId(user);
-    if (!familyId) {
-      return Response.json(
-        { error: 'No family found for user' },
-        { status: 400 }
-      );
+    // Get recurring chores
+    const filter = { is_recurring: true };
+    if (familyIdFilter) {
+      filter.family_id = familyIdFilter;
     }
-    const chores = await base44.asServiceRole.entities.Chore.filter({ is_recurring: true, family_id: familyId });
+    
+    const chores = await base44.asServiceRole.entities.Chore.filter(filter);
     
     const today = new Date();
     const todayString = today.toISOString().split('T')[0];
@@ -32,7 +35,6 @@ Deno.serve(async (req) => {
     const results = [];
 
     for (const chore of chores) {
-      // Check if we should create assignment today based on recurrence pattern
       let shouldAssign = false;
       const lastAssigned = chore.last_auto_assigned_date;
       
@@ -41,16 +43,13 @@ Deno.serve(async (req) => {
           case 'daily':
             shouldAssign = true;
             break;
-            
           case 'weekly_same_day':
             if (chore.recurrence_day !== undefined && todayDayOfWeek === chore.recurrence_day) {
               shouldAssign = true;
             }
             break;
-            
           case 'every_2_weeks':
             if (chore.recurrence_day !== undefined && todayDayOfWeek === chore.recurrence_day) {
-              // Check if it's been 14 days since last assignment
               if (lastAssigned) {
                 const lastDate = new Date(lastAssigned);
                 const daysDiff = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
@@ -60,13 +59,11 @@ Deno.serve(async (req) => {
               }
             }
             break;
-            
           case 'monthly_same_date':
             if (chore.recurrence_date !== undefined && todayDayOfMonth === chore.recurrence_date) {
               shouldAssign = true;
             }
             break;
-            
           case 'custom':
             if (chore.custom_recurrence_days && chore.custom_recurrence_days.includes(todayDayOfWeek)) {
               shouldAssign = true;
@@ -76,40 +73,29 @@ Deno.serve(async (req) => {
       }
 
       if (shouldAssign) {
-        // Determine who to assign to
         let assignToPersonId = null;
         
-        if (chore.manual_rotation_enabled && chore.rotation_person_order?.length > 0) {
-          // Use manual rotation
-          const currentIndex = chore.rotation_current_index || 0;
-          assignToPersonId = chore.rotation_person_order[currentIndex];
+        if (chore.assignment_method === 'manual_rotation' && chore.rotation_settings?.person_order?.length > 0) {
+          const currentIndex = chore.rotation_settings.current_index || 0;
+          assignToPersonId = chore.rotation_settings.person_order[currentIndex];
           
-          // Update rotation index for next time
-          const nextIndex = (currentIndex + 1) % chore.rotation_person_order.length;
+          const nextIndex = (currentIndex + 1) % chore.rotation_settings.person_order.length;
           await base44.asServiceRole.entities.Chore.update(chore.id, {
-            rotation_current_index: nextIndex,
-            rotation_last_assigned_date: todayString,
+            'rotation_settings.current_index': nextIndex,
+            'rotation_settings.last_assigned_date': todayString,
             last_auto_assigned_date: todayString
           });
-        } else if (chore.auto_assign) {
-          // Let ChoreAI handle it later - just mark as needs assignment
+        } else if (chore.assignment_method === 'ai_auto') {
           await base44.asServiceRole.entities.Chore.update(chore.id, {
             last_auto_assigned_date: todayString
           });
-          
-          results.push({
-            chore_id: chore.id,
-            chore_title: chore.title,
-            action: 'marked_for_choreai',
-            message: 'Will be assigned by ChoreAI'
-          });
+          results.push({ chore_id: chore.id, action: 'marked_for_choreai' });
           continue;
         }
 
         if (assignToPersonId) {
-          // Check if assignment already exists
           const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+          weekStart.setDate(today.getDate() - today.getDay());
           const weekStartString = weekStart.toISOString().split('T')[0];
           
           const existingAssignment = await base44.asServiceRole.entities.Assignment.filter({
@@ -119,20 +105,12 @@ Deno.serve(async (req) => {
           });
           
           if (existingAssignment.length === 0) {
-            // Calculate due date based on frequency
             const dueDate = new Date(today);
             switch (chore.frequency) {
-              case 'daily':
-                dueDate.setDate(today.getDate() + 1);
-                break;
-              case 'weekly':
-                dueDate.setDate(today.getDate() + 7);
-                break;
-              case 'monthly':
-                dueDate.setMonth(today.getMonth() + 1);
-                break;
-              default:
-                dueDate.setDate(today.getDate() + 7);
+              case 'daily': dueDate.setDate(today.getDate() + 1); break;
+              case 'weekly': dueDate.setDate(today.getDate() + 7); break;
+              case 'monthly': dueDate.setMonth(today.getMonth() + 1); break;
+              default: dueDate.setDate(today.getDate() + 7);
             }
             
             await base44.asServiceRole.entities.Assignment.create({
@@ -145,18 +123,9 @@ Deno.serve(async (req) => {
             });
             
             assignmentsCreated++;
-            results.push({
-              chore_id: chore.id,
-              chore_title: chore.title,
-              assigned_to: assignToPersonId,
-              action: 'assigned'
-            });
+            results.push({ chore_id: chore.id, assigned_to: assignToPersonId, action: 'assigned' });
           } else {
-            results.push({
-              chore_id: chore.id,
-              chore_title: chore.title,
-              action: 'skipped_duplicate'
-            });
+            results.push({ chore_id: chore.id, action: 'skipped_duplicate' });
           }
         }
       }
@@ -170,9 +139,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error processing recurring chores:', error);
-    return Response.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
