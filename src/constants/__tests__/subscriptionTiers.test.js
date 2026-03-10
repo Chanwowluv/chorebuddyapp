@@ -5,8 +5,6 @@ import {
   getMemberLimit,
   getChoreLimit,
   getItemLimit,
-  hasReachedMemberLimit,
-  getRemainingSlots,
   formatTier,
   getTierDisplayName,
   getTierColor,

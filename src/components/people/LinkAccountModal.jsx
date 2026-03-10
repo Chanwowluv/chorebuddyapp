@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { base44 } from "@/api/base44Client";
+import { linkAccountByCode, linkAccountBySelection } from "@/utils/familyLinkingClient";
 import { toast } from "sonner";
 
 export default function LinkAccountModal({ isOpen, onClose, onLink, isProcessing: externalIsProcessing }) {
@@ -21,21 +21,14 @@ export default function LinkAccountModal({ isOpen, onClose, onLink, isProcessing
 
     setIsProcessing(true);
     try {
-      const result = await base44.functions.invoke('linkAccount', { method: 'code_link', linkingCode: linkingCode.trim() });
+      const result = await linkAccountByCode(linkingCode.trim());
 
-      if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to link account');
-        return;
-      }
-
-      if (result.data.needsSelection) {
-        // Multiple unlinked people - let child choose
-        setUnlinkedPeople(result.data.unlinkedPeople);
+      if (result.needsSelection) {
+        setUnlinkedPeople(result.unlinkedPeople);
         setNeedsSelection(true);
-      } else if (result.data.success) {
-        // Already linked
-        toast.success(result.data.message);
-        if (onLink) onLink(result.data.personId);
+      } else if (result.success) {
+        toast.success(result.message || 'Account linked!');
+        if (onLink) onLink(result.personId);
         onClose();
       }
     } catch (error) {
@@ -54,15 +47,9 @@ export default function LinkAccountModal({ isOpen, onClose, onLink, isProcessing
 
     setIsProcessing(true);
     try {
-      // Confirm the selection by calling the link function again with personId
-      const result = await base44.functions.invoke('linkAccount', { method: 'select_person', personId: selectedPersonId });
+      const result = await linkAccountBySelection(selectedPersonId);
 
-      if (result.error || result.data?.error) {
-        toast.error(result.error || result.data?.error || 'Failed to link account');
-        return;
-      }
-
-      if (result.data.success) {
+      if (result.success) {
         toast.success("Account linked successfully!");
         if (onLink) onLink(selectedPersonId);
         onClose();

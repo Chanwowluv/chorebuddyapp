@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Loader2, Users, CheckCircle, AlertCircle } from 'lucide-react';
-import { joinFamily } from '@/functions/joinFamily';
+import { joinFamilyByInviteCode } from '@/utils/familyLinkingClient';
 import { createPageUrl } from '@/utils';
 
 // Constants
@@ -129,29 +129,18 @@ export default function JoinFamily() {
     setErrorCode(null);
 
     try {
-      const response = await joinFamily({
+      const response = await joinFamilyByInviteCode({
         inviteCode,
         email: invitedEmail,
         name,
         role
       });
 
-      if (response?.error) {
-        const code = getErrorCode(response);
-        setErrorCode(code);
-        setError(getErrorMessage(response));
-      } else if (response?.alreadyMember) {
-        setSuccess(true);
-        setFamilyName(response.familyName || 'your family');
-      } else {
-        setSuccess(true);
-        setFamilyName(response?.familyName || 'your family');
-      }
+      setSuccess(true);
+      setFamilyName(response?.familyName || 'your family');
     } catch (err) {
       console.error('Failed to join family:', err);
-      const code = getErrorCode(err);
-      setErrorCode(code);
-      setError(getErrorMessage(err) || err.message || ERROR_MESSAGES.JOIN_FAILED);
+      setError(err.message || ERROR_MESSAGES.JOIN_FAILED);
     } finally {
       setJoining(false);
     }

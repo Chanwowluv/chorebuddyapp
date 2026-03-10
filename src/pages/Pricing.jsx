@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Loader2, Star, ShieldCheck, AlertCircle, Users } from 'lucide-react';
 import PlanCard from '../components/pricing/PlanCard';
-import { stripeCheckout } from '@/functions/stripeCheckout';
+// stripeCheckout requires backend functions - graceful degradation below
 import { toast } from 'sonner';
 import { createPageUrl } from '@/utils';
 
@@ -110,23 +110,8 @@ export default function Pricing() {
       return;
     }
 
-    setIsRedirecting(true);
-    try {
-      const { data, error } = await stripeCheckout({
-        endpoint: 'create-checkout-session',
-        payload: { planId, isYearly: billingCycle === 'yearly' }
-      });
-      if (error) throw new Error(error);
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("Could not create checkout session.");
-      }
-    } catch (error) {
-      console.error("Error creating checkout session:", error);
-      toast.error(error.message || "Could not connect to payment gateway.");
-      setIsRedirecting(false);
-    }
+    toast.error("Payment processing is currently unavailable. Please contact support to upgrade your plan.");
+    setIsRedirecting(false);
   };
 
   if (loading && !currentUser) {

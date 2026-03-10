@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, Sparkles, Plus, TrendingUp } from 'lucide-react';
-import { aiChoreAdvisor } from '@/functions/aiChoreAdvisor';
 import { toast } from 'sonner';
 
 export default function AISuggestionsModal({ 
@@ -18,15 +17,10 @@ export default function AISuggestionsModal({
   const loadSuggestions = async () => {
     setLoading(true);
     try {
-      const response = await aiChoreAdvisor({ suggestionType });
-      if (response.data?.success) {
-        setSuggestions(response.data.suggestions);
-        setFamilyContext(response.data.familyContext);
-      } else {
-        toast.error('Failed to generate suggestions');
-      }
+      // AI suggestions require backend functions (LLM access)
+      toast.error('AI suggestions are not available on the current plan. Upgrade to a Builder+ plan to unlock AI-powered suggestions.');
+      setSuggestions([]);
     } catch (error) {
-      toast.error('Error loading AI suggestions');
       console.error(error);
     } finally {
       setLoading(false);

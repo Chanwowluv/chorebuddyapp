@@ -240,16 +240,11 @@ export default function People() {
     setIsLinking(true);
     
     try {
-      const result = await base44.functions.invoke('linkAccount', { method: 'parent_link', personId });
-
-      if (result?.data?.error) {
-        toast.error(result.data.error || TOAST_MESSAGES.ERROR_LINK_ACCOUNT);
-      } else {
-        toast.success(TOAST_MESSAGES.ACCOUNT_LINKED);
-        closeModal('link', 'personToLink');
-        // Refresh data to reflect linked account
-        await fetchData();
-      }
+      const { linkAccountToParent } = await import('@/utils/familyLinkingClient');
+      await linkAccountToParent(personId);
+      toast.success(TOAST_MESSAGES.ACCOUNT_LINKED);
+      closeModal('link', 'personToLink');
+      await fetchData();
     } catch (error) {
       console.error('Failed to link account:', error);
       toast.error(TOAST_MESSAGES.ERROR_LINK_ACCOUNT);
@@ -297,17 +292,10 @@ export default function People() {
     if (!personToUnlink) return;
 
     try {
-      const result = await base44.functions.invoke('familyLinking', {
-        action: 'unlink',
-        personId: personToUnlink.id,
-      });
-
-      if (result?.data?.error) {
-        toast.error(result.data.error || 'Failed to unlink account');
-      } else {
-        toast.success(`${personToUnlink.name}'s account has been unlinked`);
-        await fetchData();
-      }
+      const { unlinkAccount } = await import('@/utils/familyLinkingClient');
+      await unlinkAccount(personToUnlink.id);
+      toast.success(`${personToUnlink.name}'s account has been unlinked`);
+      await fetchData();
     } catch (error) {
       console.error('Failed to unlink account:', error);
       toast.error('Failed to unlink account');

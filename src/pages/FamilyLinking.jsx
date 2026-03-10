@@ -19,7 +19,7 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { familyLinking } from '@/functions/familyLinking';
+import { generateLinkingCode as generateLinkingCodeClient, joinFamilyByCode } from '@/utils/familyLinkingClient';
 import { isParent as checkParent } from '@/utils/roles';
 import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
 
@@ -102,26 +102,13 @@ export default function FamilyLinking() {
         if (!family) return;
         setIsGenerating(true);
         try {
-            const result = await familyLinking({
-                action: 'generate',
-                familyId: family.id
-            });
-
-            if (result.error || result.data?.error) {
-                toast.error(result.error || result.data?.error || 'Failed to generate code');
-                return;
-            }
-
-            if (result.data?.success) {
-                setLinkingCode(result.data.linkingCode);
-                setCodeExpiry(result.data.expiresAt);
-                toast.success('New linking code generated!');
-            } else {
-                toast.error('Failed to generate code');
-            }
+            const result = await generateLinkingCodeClient(family.id);
+            setLinkingCode(result.linkingCode);
+            setCodeExpiry(result.expiresAt);
+            toast.success('New linking code generated!');
         } catch (error) {
             console.error('Error generating code:', error);
-            toast.error('Failed to generate linking code');
+            toast.error(error.message || 'Failed to generate linking code');
         } finally {
             setIsGenerating(false);
         }
@@ -142,31 +129,17 @@ export default function FamilyLinking() {
 
         setIsJoining(true);
         try {
-            const result = await familyLinking({
-                action: 'join',
-                linkingCode: inputCode.trim()
-            });
+            const result = await joinFamilyByCode({ linkingCode: inputCode.trim() });
+            setJoinSuccess(true);
+            setJoinedFamilyName(result.familyName);
+            toast.success(`Welcome to ${result.familyName}!`);
 
-            if (result.error || result.data?.error) {
-                toast.error(getLinkingErrorMessage(result));
-                return;
-            }
-
-            if (result.data?.success) {
-                setJoinSuccess(true);
-                setJoinedFamilyName(result.data.familyName);
-                toast.success(`Welcome to ${result.data.familyName}!`);
-
-                // Redirect after a short delay to show success animation
-                setTimeout(() => {
-                    navigate(createPageUrl('Dashboard'));
-                }, 2000);
-            } else {
-                toast.error('Failed to join family');
-            }
+            setTimeout(() => {
+                navigate(createPageUrl('Dashboard'));
+            }, 2000);
         } catch (error) {
             console.error('Error joining family:', error);
-            toast.error(getLinkingErrorMessage(error) || 'Failed to join family. Please check your code.');
+            toast.error(error.message || 'Failed to join family. Please check your code.');
         } finally {
             setIsJoining(false);
         }
