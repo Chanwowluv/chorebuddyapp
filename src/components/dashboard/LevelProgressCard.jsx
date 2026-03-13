@@ -42,11 +42,16 @@ export default function LevelProgressCard() {
       pointsIntoLevel,
       pointsRequiredForNext,
       text: `${pointsIntoLevel} / ${pointsRequiredForNext} points to next level`,
-      currentThreshold
+      currentThreshold,
+      nextThreshold
     };
   }, [myPerson]);
 
   if (!myPerson || !progressData) return null;
+
+  const gradientClass = progressData.isMax 
+    ? "bg-gradient-to-r from-red-400 to-red-500" 
+    : `bg-gradient-to-r ${progressData.currentThreshold.color} ${progressData.currentThreshold.toColor}`;
 
   return (
     <div className="funky-card p-5 bg-white flex flex-col justify-center gap-3 w-full flex-1">
@@ -69,8 +74,12 @@ export default function LevelProgressCard() {
       <div className="space-y-1 mt-1">
         <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden border-2 border-[#5E3B85]">
           <div 
-            className="bg-green-400 h-full transition-all duration-500 ease-out"
+            className={`h-full transition-all duration-500 ease-out ${gradientClass}`}
             style={{ width: `${progressData.percentage}%` }}
+            role="progressbar"
+            aria-valuenow={progressData.pointsIntoLevel || 100}
+            aria-valuemin={0}
+            aria-valuemax={progressData.pointsRequiredForNext || 100}
           />
         </div>
         <p className="text-xs body-font text-right text-gray-600 font-bold">
