@@ -16,6 +16,7 @@ import DashboardStats from "../components/dashboard/DashboardStats";
 import ChoresSection from "../components/dashboard/ChoresSection";
 import LevelProgressCard from "../components/dashboard/LevelProgressCard";
 import StreakDisplay from "../components/dashboard/StreakDisplay";
+import BadgeCollection from "../components/dashboard/BadgeCollection";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
 import { isParent as checkParent, isChild as checkChild } from "@/utils/roles";
 import ErrorBoundaryWithRetry from "../components/ui/ErrorBoundaryWithRetry";
@@ -416,6 +417,7 @@ export default function Dashboard() {
           <LevelProgressCard />
           <StreakDisplay />
         </div>
+        <BadgeCollection />
 
         <div className="funky-card p-6 md:p-8">
           <h1 className="header-font text-3xl md:text-4xl lg:text-5xl text-[#2B59C3] mb-2">
