@@ -414,6 +414,7 @@ export default function Dashboard() {
       <div className="pb-32 lg:pb-8 space-y-6 md:space-y-8">
         <div className="flex flex-col md:flex-row gap-4 w-full">
           <LevelProgressCard />
+          <StreakDisplay />
         </div>
 
         <div className="funky-card p-6 md:p-8">
