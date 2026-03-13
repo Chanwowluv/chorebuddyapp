@@ -35,24 +35,22 @@ export default function ApprovalQueue() {
       const basePoints = chore?.custom_points || pointMap[chore?.difficulty] || 15;
       const points = Math.round(basePoints * (assignment.bonus_multiplier || 1));
 
-      // Approve the assignment
-      await updateAssignment(assignment.id, {
-        approval_status: 'approved',
-        approved_by: user.id,
-        approved_date: new Date().toISOString()
-      });
+      // Call the serverless function
+      const response = await base44.functions.invoke('approveChore', { assignment_id: assignment.id });
+      const result = response.data || response;
 
-      // Award points
-      await addReward({
-        person_id: assignment.person_id,
-        chore_id: assignment.chore_id,
-        points: points,
-        reward_type: 'points',
-        week_start: assignment.week_start,
-        description: `Approved: ${chore?.title || 'Chore'}`
-      });
+      // Refresh data
+      await fetchData();
 
       toast.success('Chore approved! Points awarded.');
+      
+      if (result.new_badges?.length > 0 || result.level_changed) {
+        setToastData({
+          newBadges: result.new_badges || [],
+          levelChanged: result.level_changed || false,
+          newLevel: result.new_level || null
+        });
+      }
       
       // Notify the person
       const person = people.find(p => p.id === assignment.person_id);
