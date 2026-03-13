@@ -10,9 +10,9 @@ export default function DashboardStats({ currentWeekAssignments, completedAssign
   const isChild = checkChild(user);
   const totalPoints = linkedPerson ? calculateTotalPoints(rewards, linkedPerson.id) : 0;
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+    <div className={`grid grid-cols-2 ${isChild && linkedPerson ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-3 md:gap-4 mb-6 md:mb-8`}>
       {isChild && linkedPerson && (
-        <div className="col-span-2 lg:col-span-1">
+        <div className="col-span-2 md:col-span-1">
           <PointsDisplay points={totalPoints} size="small" />
         </div>
       )}
