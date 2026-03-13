@@ -108,6 +108,14 @@ export default function ApprovalQueue() {
 
   return (
     <div className="mx-4 md:mx-8 lg:mx-24 pb-32 space-y-6 lg:pb-8">
+      {toastData && (
+        <BadgeEarnedToast 
+          newBadges={toastData.newBadges}
+          levelChanged={toastData.levelChanged}
+          newLevel={toastData.newLevel}
+          onClose={() => setToastData(null)}
+        />
+      )}
       {/* Header */}
       <div className="funky-card p-6 md:p-8">
         <div className="flex items-center gap-4 md:gap-6">
