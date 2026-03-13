@@ -19,16 +19,19 @@ Deno.serve(async (req) => {
 
     if (points === 0) return Response.json({ success: true });
 
-    // Update Person points balance
-    const person = await base44.asServiceRole.entities.Person.get(personId);
-    if (person) {
-      const updates = {
-        points_balance: (person.points_balance || 0) + points
-      };
-      if (points > 0) {
-        updates.total_points_earned = (person.total_points_earned || 0) + points;
+    // Only update Person points here if it's NOT from a chore completion.
+    // Chore completions handle their own Person updates atomically.
+    if (!data.chore_id) {
+      const person = await base44.asServiceRole.entities.Person.get(personId);
+      if (person) {
+        const updates = {
+          points_balance: (person.points_balance || 0) + points
+        };
+        if (points > 0) {
+          updates.total_points_earned = (person.total_points_earned || 0) + points;
+        }
+        await base44.asServiceRole.entities.Person.update(personId, updates);
       }
-      await base44.asServiceRole.entities.Person.update(personId, updates);
     }
 
     // Update Family Goals if points were earned
