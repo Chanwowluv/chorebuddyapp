@@ -295,6 +295,19 @@ export function getUserFamilyId(user: AppUser): string | null {
   return user.family_id ?? null;
 }
 
+export class AppError extends Error {
+  constructor(public code: string, message: string) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+export function requireLinkedAccount(person: Person): void {
+  if (!person.linked_user_id) {
+    throw new AppError("ACCOUNT_NOT_LINKED", "This person must link their account before performing this action");
+  }
+}
+
 // ─── Code Utilities ───────────────────────────────────────────────────────────
 
 export function generateCode(length = 8): string {
