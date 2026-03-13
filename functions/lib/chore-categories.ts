@@ -24,3 +24,8 @@ export function validateCategories(categories: string[]): void {
     throw new Error(`INVALID_CATEGORY: Invalid categories provided: ${invalid.join(', ')}. Valid options are: ${CHORE_CATEGORIES.join(', ')}`);
   }
 }
+
+// Dummy handler to satisfy deployment requirements
+Deno.serve(async () => {
+  return new Response("Chore Categories Library", { status: 200 });
+});
