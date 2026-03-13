@@ -124,7 +124,7 @@ export default function FamilyOverview() {
           <Link 
             key={member.id}
             to={createPageUrl('People')}
-            className="funky-card p-4 flex items-center justify-between hover:bg-gray-50 transition-colors relative"
+            className="funky-card p-4 flex items-center justify-between hover:bg-gray-50 transition-colors relative focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5E3B85]"
           >
             {member.pendingCount > 0 && (
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm z-10">
