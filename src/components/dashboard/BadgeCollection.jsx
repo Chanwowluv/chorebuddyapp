@@ -68,11 +68,11 @@ export default function BadgeCollection() {
         
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <button className="text-sm body-font font-bold text-[#2B59C3] hover:text-[#24479c] transition-colors">
+            <button className="text-sm body-font font-bold text-[#2B59C3] hover:text-[#24479c] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5E3B85] rounded-md px-2 py-1">
               View All
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto funky-card border-4 rounded-3xl p-6">
+          <DialogContent className="w-full h-[100dvh] sm:h-auto sm:w-auto sm:max-w-3xl sm:max-h-[80vh] overflow-y-auto funky-card border-0 sm:border-4 rounded-none sm:rounded-3xl p-6 m-0 sm:m-4">
             <DialogHeader>
               <DialogTitle className="header-font text-2xl text-[#5E3B85] flex items-center gap-2">
                 <Award className="w-6 h-6 text-yellow-500" />
@@ -90,16 +90,24 @@ export default function BadgeCollection() {
                     key={catalogItem.id} 
                     className={`relative p-4 rounded-2xl border-2 flex flex-col items-center text-center transition-all ${
                       isEarned 
-                        ? "bg-yellow-50 border-yellow-200 shadow-sm" 
+                        ? "bg-yellow-50 border-yellow-300 shadow-sm" 
                         : "bg-gray-50 border-gray-200 opacity-70 grayscale-[0.5]"
                     }`}
+                    aria-label={`${catalogItem.title}, ${isEarned ? 'Earned' : 'Locked'}. ${catalogItem.description}`}
                   >
                     {!isEarned && (
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute top-2 right-2" title="Locked">
                         <Lock className="w-4 h-4 text-gray-400" />
+                        <span className="sr-only">Locked</span>
                       </div>
                     )}
-                    <div className="text-4xl mb-2">{catalogItem.icon}</div>
+                    {isEarned && (
+                      <div className="absolute top-2 right-2" title="Earned">
+                        <Award className="w-4 h-4 text-yellow-500" />
+                        <span className="sr-only">Earned</span>
+                      </div>
+                    )}
+                    <div className="text-4xl mb-2" aria-hidden="true">{catalogItem.icon}</div>
                     <h4 className={`body-font font-bold text-sm ${isEarned ? 'text-yellow-900' : 'text-gray-600'}`}>
                       {catalogItem.title}
                     </h4>
