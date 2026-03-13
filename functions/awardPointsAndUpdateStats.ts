@@ -1,5 +1,25 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import { getLevelForPoints } from './lib/level-config.ts';
+
+const LEVEL_THRESHOLDS = [
+  { level: 1, minPoints: 0, title: "Rookie", icon: "🌱" },
+  { level: 2, minPoints: 100, title: "Helper", icon: "🧹" },
+  { level: 3, minPoints: 300, title: "Pro", icon: "⭐" },
+  { level: 4, minPoints: 600, title: "Star", icon: "🌟" },
+  { level: 5, minPoints: 1000, title: "Champion", icon: "🏆" },
+  { level: 6, minPoints: 2000, title: "Legend", icon: "👑" },
+];
+
+function getLevelForPoints(totalPoints) {
+  let currentLevel = LEVEL_THRESHOLDS[0];
+  for (const threshold of LEVEL_THRESHOLDS) {
+    if (totalPoints >= threshold.minPoints) {
+      currentLevel = threshold;
+    } else {
+      break;
+    }
+  }
+  return { level: currentLevel.level, title: currentLevel.title, icon: currentLevel.icon };
+}
 
 Deno.serve(async (req) => {
   try {
