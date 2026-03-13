@@ -2,12 +2,12 @@ import React, { useMemo } from "react";
 import { useData } from "../contexts/DataContext";
 
 const LEVEL_THRESHOLDS = [
-  { level: 1, minPoints: 0, title: "Rookie", icon: "🌱" },
-  { level: 2, minPoints: 100, title: "Helper", icon: "🧹" },
-  { level: 3, minPoints: 300, title: "Pro", icon: "⭐" },
-  { level: 4, minPoints: 600, title: "Star", icon: "🌟" },
-  { level: 5, minPoints: 1000, title: "Champion", icon: "🏆" },
-  { level: 6, minPoints: 2000, title: "Legend", icon: "👑" },
+  { level: 1, minPoints: 0, title: "Rookie", icon: "🌱", color: "from-green-400", toColor: "to-blue-400" },
+  { level: 2, minPoints: 100, title: "Helper", icon: "🧹", color: "from-blue-400", toColor: "to-purple-400" },
+  { level: 3, minPoints: 300, title: "Pro", icon: "⭐", color: "from-purple-400", toColor: "to-yellow-400" },
+  { level: 4, minPoints: 600, title: "Star", icon: "🌟", color: "from-yellow-400", toColor: "to-orange-400" },
+  { level: 5, minPoints: 1000, title: "Champion", icon: "🏆", color: "from-orange-400", toColor: "to-red-400" },
+  { level: 6, minPoints: 2000, title: "Legend", icon: "👑", color: "from-red-400", toColor: "to-red-500" },
 ];
 
 export default function LevelProgressCard() {
