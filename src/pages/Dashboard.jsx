@@ -411,6 +411,10 @@ export default function Dashboard() {
       showConfetti={!!completedChoreIdWithConfetti}
     >
       <div className="pb-32 lg:pb-8 space-y-6 md:space-y-8">
+        <div className="flex flex-col md:flex-row gap-4 w-full">
+          <LevelProgressCard />
+        </div>
+
         <div className="funky-card p-6 md:p-8">
           <h1 className="header-font text-3xl md:text-4xl lg:text-5xl text-[#2B59C3] mb-2">
             My Chores
