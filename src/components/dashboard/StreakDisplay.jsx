@@ -52,9 +52,9 @@ export default function StreakDisplay() {
         displayStreak: currentStreak,
         bestStreak,
         message: "Keep it up!",
-        color: "text-green-600",
+        color: "text-green-500",
         bg: "bg-green-50",
-        border: "border-green-400"
+        border: "border-green-500"
       };
     } else if (diffDays === 1) {
       return {
@@ -62,9 +62,9 @@ export default function StreakDisplay() {
         displayStreak: currentStreak,
         bestStreak,
         message: "Complete a chore today to keep your streak!",
-        color: "text-amber-600",
+        color: "text-amber-500",
         bg: "bg-amber-50",
-        border: "border-amber-400"
+        border: "border-amber-500"
       };
     } else {
       return {
@@ -72,8 +72,8 @@ export default function StreakDisplay() {
         displayStreak: 0,
         bestStreak,
         message: "Start a new streak today!",
-        color: "text-gray-500",
-        bg: "bg-gray-100",
+        color: "text-gray-400",
+        bg: "bg-gray-50",
         border: "border-gray-300"
       };
     }
