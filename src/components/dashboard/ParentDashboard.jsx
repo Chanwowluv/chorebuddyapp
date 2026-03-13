@@ -100,6 +100,7 @@ export default function ParentDashboard({ assignChoresForWeek, isAssigning }) {
         <TabsContent value="overview" className="space-y-6">
           <QuickActions />
           <DashboardSummary />
+          <FamilyOverview />
         </TabsContent>
 
         <TabsContent value="chores">
