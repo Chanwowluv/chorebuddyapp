@@ -8,11 +8,14 @@ import { format } from 'date-fns';
 import { AVATAR_COLORS, DIFFICULTY_STARS } from '../components/lib/constants';
 import { showNotification } from '../components/notifications/NotificationManager';
 import { isParent as checkParent } from '@/utils/roles';
+import { base44 } from '@/api/base44Client';
+import BadgeEarnedToast from '../components/gamification/BadgeEarnedToast';
 
 export default function ApprovalQueue() {
-  const { assignments, chores, people, user, loading, updateAssignment, addReward } = useData();
+  const { assignments, chores, people, user, loading, updateAssignment, addReward, fetchData } = useData();
   const [processingId, setProcessingId] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [toastData, setToastData] = useState(null);
 
   const pendingApprovals = useMemo(() => {
     return assignments
