@@ -14,6 +14,7 @@ import Confetti from "../components/ui/Confetti";
 import ParentDashboard from "../components/dashboard/ParentDashboard";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import ChoresSection from "../components/dashboard/ChoresSection";
+import LevelProgressCard from "../components/dashboard/LevelProgressCard";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
 import { isParent as checkParent, isChild as checkChild } from "@/utils/roles";
 import ErrorBoundaryWithRetry from "../components/ui/ErrorBoundaryWithRetry";
