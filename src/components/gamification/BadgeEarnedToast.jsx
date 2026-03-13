@@ -68,7 +68,11 @@ export default function BadgeEarnedToast({ newBadges = [], levelChanged = false,
 
   return (
     <AnimatePresence>
-      <div className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4">
+      <div 
+        className="fixed top-20 left-0 right-0 z-[100] flex justify-center pointer-events-none px-4"
+        role="alert"
+        aria-live="assertive"
+      >
         <motion.div
           key={`${currentItem.type}-${currentIndex}`}
           initial={{ opacity: 0, y: -50, scale: 0.8 }}
