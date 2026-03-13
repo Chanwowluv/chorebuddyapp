@@ -38,7 +38,8 @@ export default function BadgeCollection() {
         setLoading(true);
         const fetchedBadges = await base44.entities.Badge.filter({ person_id: myPerson.id });
         fetchedBadges.sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime());
-        setBadges(fetchedBadges);
+        // Limit to 50 badges for performance
+        setBadges(fetchedBadges.slice(0, 50));
       } catch (error) {
         console.error("Error fetching badges:", error);
       } finally {
