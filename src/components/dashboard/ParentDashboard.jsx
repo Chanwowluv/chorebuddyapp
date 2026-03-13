@@ -9,6 +9,7 @@ import RewardTracker from './RewardTracker';
 import DashboardHeader from './DashboardHeader';
 import QuickActions from './QuickActions';
 import DashboardSummary from './DashboardSummary';
+import FamilyOverview from './FamilyOverview';
 import ChoresSection from './ChoresSection';
 import DashboardEmptyState from './DashboardEmptyState';
 
