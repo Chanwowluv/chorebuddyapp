@@ -95,8 +95,8 @@ export default function Achievements() {
         </div>
       )}
       {people.map(person => {
-        const personAchievements = achievementsByPerson[person.id] || [];
-        const earnedBadgeTypes = new Set(personAchievements.map(a => a.badge_type));
+        const personBadges = badgesByPerson[person.id] || [];
+        const earnedBadgeTypes = new Set(personBadges.map(a => a.badge_type));
 
         return (
           <div key={person.id} className="funky-card p-6 md:p-8">
@@ -109,7 +109,7 @@ export default function Achievements() {
               <div>
                 <h2 className="header-font text-2xl text-[#2B59C3]">{person.name}</h2>
                 <p className="body-font-light text-gray-600">
-                  {personAchievements.length} {personAchievements.length === 1 ? 'badge' : 'badges'}
+                  {personBadges.length} {personBadges.length === 1 ? 'badge' : 'badges'}
                 </p>
               </div>
             </div>
