@@ -1,22 +1,92 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
-import { requireLinkedAccount, requireAuth, parseRequestBody, errorResponse, successResponse, typedErrorResponse } from './lib/shared-utils.ts';
+
+// ─── Shared Utils Inlined ─────────────────────────────────────────────────────
+export interface Base44Client {
+  auth: {
+    me(): Promise<AppUser | null>;
+  };
+  asServiceRole: {
+    entities: {
+      Person: EntityAPI<Person>;
+      ChoreCompletion: EntityAPI<any>;
+      Assignment: EntityAPI<any>;
+      Reward: EntityAPI<any>;
+      Chore: EntityAPI<any>;
+    };
+  };
+}
+
+export interface EntityAPI<T> {
+  get(id: string): Promise<T>;
+  filter(query: Partial<T>): Promise<T[]>;
+  create(data: Partial<T>): Promise<T>;
+  update(id: string, data: Partial<T>): Promise<T>;
+}
+
+export interface AppUser {
+  id: string;
+  email: string;
+  family_id?: string | null;
+  family_role?: string;
+  linked_person_id?: string | null;
+}
+
+export interface Person {
+  id: string;
+  name: string;
+  family_id: string;
+  linked_user_id?: string | null;
+  role: string;
+}
+
+export class AppError extends Error {
+  constructor(public code: string, message: string) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+export function requireLinkedAccount(person: Person): void {
+  if (!person.linked_user_id) {
+    throw new AppError("ACCOUNT_NOT_LINKED", "This person must link their account before performing this action");
+  }
+}
+
+const HEADERS = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+function errorResponse(message: string, status = 400): Response {
+  return new Response(JSON.stringify({ success: false, error: message }), { status, headers: HEADERS });
+}
+
+function typedErrorResponse(code: string, message: string, status = 400): Response {
+  return new Response(JSON.stringify({ success: false, error: message, errorCode: code }), { status, headers: HEADERS });
+}
+
+function successResponse(data: Record<string, unknown>): Response {
+  return new Response(JSON.stringify({ success: true, ...data }), { status: 200, headers: HEADERS });
+}
 
 export default async function submitChore(req: Request) {
-  const base44 = createClientFromRequest(req);
+  if (req.method === 'OPTIONS') return new Response(null, { headers: HEADERS });
+
+  const base44 = createClientFromRequest(req) as unknown as Base44Client;
   
-  const { user, error: authError } = await requireAuth(base44);
-  if (authError) return authError;
-
-  const { data: body, error: parseError } = await parseRequestBody(req);
-  if (parseError) return parseError;
-
-  const { assignmentId, choreId, notes, photoUrl, difficultyRating } = body as any;
-
-  if (!assignmentId || !choreId) {
-    return errorResponse('Missing assignmentId or choreId', 400);
-  }
-
   try {
+    const user = await base44.auth.me();
+    if (!user) return errorResponse('Authentication required', 401);
+
+    const body = await req.json();
+    const { assignmentId, choreId, notes, photoUrl, difficultyRating } = body;
+
+    if (!assignmentId || !choreId) {
+      return errorResponse('Missing assignmentId or choreId', 400);
+    }
+
     // Get the person record for the user
     const persons = await base44.asServiceRole.entities.Person.filter({ linked_user_id: user.id });
     const person = persons[0];
@@ -77,7 +147,7 @@ export default async function submitChore(req: Request) {
     }
 
     return successResponse({ message: 'Chore submitted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'AppError') {
       return typedErrorResponse(error.code, error.message);
     }
