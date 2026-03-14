@@ -87,9 +87,15 @@ export default async function submitChore(req: Request) {
       return errorResponse('Missing assignmentId or choreId', 400);
     }
 
-    // Get the person record for the user
-    const persons = await base44.asServiceRole.entities.Person.filter({ linked_user_id: user.id });
-    const person = persons[0];
+    const assignment = await base44.asServiceRole.entities.Assignment.get(assignmentId);
+    const chore = await base44.asServiceRole.entities.Chore.get(choreId);
+
+    if (!assignment || !chore) {
+      return errorResponse('Assignment or Chore not found', 404);
+    }
+
+    // Get the person record for the assignment
+    const person = await base44.asServiceRole.entities.Person.get(assignment.person_id);
 
     if (!person) {
       return typedErrorResponse('PERSON_NOT_FOUND', 'Person record not found');
@@ -98,11 +104,9 @@ export default async function submitChore(req: Request) {
     // Apply the check!
     requireLinkedAccount(person);
 
-    const assignment = await base44.asServiceRole.entities.Assignment.get(assignmentId);
-    const chore = await base44.asServiceRole.entities.Chore.get(choreId);
-
-    if (!assignment || !chore) {
-      return errorResponse('Assignment or Chore not found', 404);
+    // Verify the user is submitting their own chore
+    if (person.linked_user_id !== user.id) {
+      return typedErrorResponse('ACCESS_DENIED', 'You can only submit your own chores');
     }
 
     const needsApproval = chore.requires_approval;
