@@ -37,7 +37,6 @@ export const DataProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [goals, setGoals] = useState([]);
   const [completions, setCompletions] = useState([]);
-  const [achievements, setAchievements] = useState([]);
   const [user, setUser] = useState(null);
   const [family, setFamily] = useState(null);
 
