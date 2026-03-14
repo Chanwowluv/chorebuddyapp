@@ -8,39 +8,39 @@ import { useQuery } from '@tanstack/react-query';
 export default function Achievements() {
   const { people, user, loading: dataLoading } = useData();
 
-  const { data: achievements = [], isLoading: achievementsLoading } = useQuery({
-    queryKey: ['achievements', user?.family_id],
+  const { data: badges = [], isLoading: badgesLoading } = useQuery({
+    queryKey: ['badges', user?.family_id],
     queryFn: async () => {
       if (!user?.family_id) return [];
-      const data = await base44.entities.Achievement.filter({ family_id: user.family_id });
-      return [...data].sort((a, b) => (b.earned_date || '').localeCompare(a.earned_date || ''));
+      const data = await base44.entities.Badge.filter({ family_id: user.family_id });
+      return [...data].sort((a, b) => (b.earned_at || '').localeCompare(a.earned_at || ''));
     },
     enabled: !!user?.family_id,
     initialData: []
   });
 
-  const loading = dataLoading || achievementsLoading;
+  const loading = dataLoading || badgesLoading;
 
-  // Group achievements by person
-  const achievementsByPerson = useMemo(() => {
+  // Group badges by person
+  const badgesByPerson = useMemo(() => {
     const grouped = {};
     people.forEach(person => {
-      grouped[person.id] = achievements.filter(a => a.person_id === person.id);
+      grouped[person.id] = badges.filter(a => a.person_id === person.id);
     });
     return grouped;
-  }, [achievements, people]);
+  }, [badges, people]);
 
   // Calculate completion stats
   const stats = useMemo(() => {
     const totalBadges = Object.keys(BADGE_CONFIG).length;
-    const earnedBadges = new Set(achievements.map(a => a.badge_type)).size;
+    const earnedBadges = new Set(badges.map(a => a.badge_type)).size;
     return {
       total: totalBadges,
       earned: earnedBadges,
       remaining: totalBadges - earnedBadges,
       percentage: totalBadges > 0 ? Math.round((earnedBadges / totalBadges) * 100) : 0
     };
-  }, [achievements]);
+  }, [badges]);
 
   if (loading) {
     return (
