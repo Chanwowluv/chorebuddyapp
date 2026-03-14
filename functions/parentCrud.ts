@@ -116,6 +116,9 @@ const ALLOWED_OPERATIONS: Record<string, string[]> = {
   FamilyGoal: ['create', 'update', 'delete'],
 };
 
+// Valid non-parent roles that a parent can assign to family members
+const ASSIGNABLE_ROLES = ['teen', 'child'] as const;
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -133,7 +136,47 @@ Deno.serve(async (req) => {
     const { data: body, error: parseError } = await parseRequestBody(req);
     if (parseError) return parseError;
 
-    const { entity, operation, data, id } = body;
+    const { entity, operation, data, id, action } = body;
+
+    // 2b. Handle special actions (not entity CRUD)
+    if (action === 'changeRole') {
+      const { personId, newRole } = body;
+      if (!personId || !newRole) {
+        return errorResponse('Missing personId or newRole for changeRole');
+      }
+      if (!ASSIGNABLE_ROLES.includes(newRole)) {
+        return errorResponse(`Invalid role. Must be one of: ${ASSIGNABLE_ROLES.join(', ')}. Parent role cannot be assigned — create a new family instead.`);
+      }
+      const familyId = getUserFamilyId(user);
+      if (!familyId) return errorResponse('User is not part of any family');
+
+      const entities = base44.asServiceRole.entities;
+      const person = await entities.Person.get(personId);
+      if (!person) return errorResponse('Person not found', 404);
+      if (person.family_id !== familyId) {
+        return forbiddenResponse('Access denied: person belongs to a different family');
+      }
+
+      await entities.Person.update(personId, { role: newRole });
+
+      // Also update the linked User's family_role if they have a linked account
+      if (person.linked_user_id) {
+        try {
+          await entities.User.update(person.linked_user_id, { family_role: newRole });
+        } catch (err) {
+          logError('parentCrud', err, { context: 'changeRole_update_user', linkedUserId: person.linked_user_id });
+        }
+      }
+
+      logInfo('parentCrud', 'Role changed', {
+        personId,
+        oldRole: person.role,
+        newRole,
+        changedBy: user.id,
+      });
+
+      return successResponse({ personId, oldRole: person.role, newRole });
+    }
 
     // 3. Validate entity + operation against whitelist
     if (!entity || !operation) {
@@ -186,6 +229,11 @@ Deno.serve(async (req) => {
       case 'update': {
         if (!id) return errorResponse('Missing id for update');
         if (!data) return errorResponse('Missing data for update');
+
+        // Security: Prevent role escalation via entity updates
+        if (entity === 'Person' && data.role === 'parent') {
+          return forbiddenResponse('Cannot set role to parent via update. Use family creation instead.');
+        }
 
         // Verify entity belongs to user's family before allowing update
         const existing = await entities[entity].get(id);

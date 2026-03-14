@@ -25,9 +25,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    
-    if (!user || user.role !== 'parent') {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    if (!user || (user.family_role !== 'parent' && user.role !== 'admin')) {
+      return Response.json({ error: 'Unauthorized: only parents can approve chores' }, { status: 403 });
     }
 
     const { assignment_id } = await req.json();
@@ -38,6 +38,11 @@ Deno.serve(async (req) => {
     const assignment = await base44.asServiceRole.entities.Assignment.get(assignment_id);
     if (!assignment) {
       return Response.json({ error: 'Assignment not found' }, { status: 404 });
+    }
+
+    // Security: Verify the assignment belongs to the approving parent's family
+    if (assignment.family_id !== user.family_id) {
+      return Response.json({ error: 'Access denied: assignment belongs to a different family' }, { status: 403 });
     }
 
     if (assignment.approval_status === 'approved') {

@@ -504,7 +504,13 @@ async function handleJoinFamily(base44: Base44Client, user: AppUser, linkingCode
   const { valid, code: sanitizedCode, error: codeErr } = sanitizeCode(linkingCode);
   if (!valid) return typedErrorResponse('INVALID_CODE', codeErr ?? 'Invalid code format');
 
-  const roleToAssign = isValidRole(user.family_role) ? user.family_role : 'child';
+  // Security: Never allow joining as parent via linking code.
+  // Parent role is only granted by creating a new family.
+  const NON_PARENT_ROLES = ['teen', 'child'] as const;
+  const userRole = user.family_role?.toLowerCase();
+  const roleToAssign = (userRole && (NON_PARENT_ROLES as readonly string[]).includes(userRole))
+    ? userRole
+    : 'child';
 
   let families: Family[];
   try {

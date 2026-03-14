@@ -72,7 +72,7 @@ export default function Account() {
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
   const { currentTheme, updateTheme } = useTheme();
 
-  // Determine effective subscription tier (child/teen/toddler inherits parent's)
+  // Determine effective subscription tier (child/teen inherits parent's)
   const getEffectiveSubscriptionTier = () => {
     if (isChild(user) && linkedPerson) {
       // Non-parent members use parent's subscription

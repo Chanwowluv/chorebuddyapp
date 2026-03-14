@@ -291,6 +291,19 @@ export function isParent(user: AppUser): boolean {
   return user.family_role?.toLowerCase() === 'parent';
 }
 
+/** Require authenticated parent. Returns user or error response. */
+export async function requireParent(base44: Base44Client): Promise<AuthResult> {
+  const { user, error } = await requireAuth(base44);
+  if (error) return { user: null, error };
+  if (!isParent(user!)) {
+    return { user: null, error: forbiddenResponse('Only parents can perform this action') };
+  }
+  return { user };
+}
+
+/** Roles that non-parent users can be assigned */
+export const NON_PARENT_ROLES = VALID_ROLES.filter(r => r !== 'parent');
+
 export function getUserFamilyId(user: AppUser): string | null {
   return user.family_id ?? null;
 }
@@ -565,6 +578,25 @@ export function logError(context: string, error: unknown, data?: Record<string, 
   const message = error instanceof Error ? error.message : String(error);
   const stack = error instanceof Error ? error.stack : undefined;
   console.error(JSON.stringify({ level: 'ERROR', context, message, stack, ...data, ts: new Date().toISOString() }));
+}
+
+// ─── Audit Logging ───────────────────────────────────────────────────────────
+// Structured audit log for sensitive actions (role changes, member adds/removes, etc.)
+
+export interface AuditEntry {
+  action: string;
+  actor_id: string;
+  target_id?: string;
+  family_id?: string;
+  details?: Record<string, unknown>;
+}
+
+export function logAudit(entry: AuditEntry): void {
+  console.log(JSON.stringify({
+    level: 'AUDIT',
+    ...entry,
+    ts: new Date().toISOString(),
+  }));
 }
 
 // Dummy handler to satisfy deployment requirements

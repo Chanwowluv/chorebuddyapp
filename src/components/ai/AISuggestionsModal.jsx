@@ -58,7 +58,7 @@ export default function AISuggestionsModal({
           <div className="funky-card bg-blue-50 p-4 mb-4">
             <p className="body-font text-sm text-gray-700">
               Based on your family of {familyContext.totalMembers} members
-              ({familyContext.composition.parent} parent{familyContext.composition.parent !== 1 ? 's' : ''}, {familyContext.composition.teens} teen{familyContext.composition.teens !== 1 ? 's' : ''}, {familyContext.composition.children} child{familyContext.composition.children !== 1 ? 'ren' : ''}{familyContext.composition.toddlers > 0 ? `, ${familyContext.composition.toddlers} toddler${familyContext.composition.toddlers !== 1 ? 's' : ''}` : ''})
+              ({familyContext.composition.parent} parent{familyContext.composition.parent !== 1 ? 's' : ''}, {familyContext.composition.teens} teen{familyContext.composition.teens !== 1 ? 's' : ''}, {familyContext.composition.children} child{familyContext.composition.children !== 1 ? 'ren' : ''})
               with a {familyContext.completionRate}% completion rate
             </p>
           </div>

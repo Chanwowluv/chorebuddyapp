@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     }
 
     if (!isValidRole(role)) {
-      return errorResponse('Invalid role. Must be parent, teen, child, or toddler');
+      return errorResponse('Invalid role. Must be parent, teen, or child');
     }
 
     // Send email invitation

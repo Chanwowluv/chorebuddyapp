@@ -592,13 +592,20 @@ Deno.serve(async (req: Request) => {
     if (authError) return authError;
     if (parseError) return parseError;
 
-    const { inviteCode, role = 'child' } = body as { inviteCode?: string; role?: string };
+    const { inviteCode, role: requestedRole = 'child' } = body as { inviteCode?: string; role?: string };
 
     const { valid: codeValid, code: sanitizedCode, error: codeError } = sanitizeCode(inviteCode);
     if (!codeValid) return typedErrorResponse('INVALID_CODE', codeError ?? 'Invalid invite code format');
 
-    if (!isValidRole(role)) {
-      return typedErrorResponse('INVALID_ROLE', `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}`);
+    // Security: Never allow joining as parent via invite code.
+    // Parent role is only granted by creating a new family.
+    const NON_PARENT_ROLES = VALID_ROLES.filter(r => r !== 'parent');
+    const role = typeof requestedRole === 'string' && NON_PARENT_ROLES.includes(requestedRole.toLowerCase() as ValidRole)
+      ? requestedRole.toLowerCase()
+      : 'child';
+
+    if (typeof requestedRole === 'string' && requestedRole.toLowerCase() === 'parent') {
+      return typedErrorResponse('INVALID_ROLE', 'Cannot join as parent. Create a new family instead.');
     }
 
     const { family, existingPerson, fetchError } = await fetchFamilyAndExistingPerson(

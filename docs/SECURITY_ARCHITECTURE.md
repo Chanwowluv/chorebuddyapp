@@ -51,13 +51,12 @@ Defined in `src/utils/roles.js`:
 | `parent` | Full admin — CRUD all entities, manage family, AI features, reports |
 | `teen` | View + complete assigned chores, view rewards |
 | `child` | Same as teen |
-| `toddler` | Minimal — view assigned chores |
 
 ### Helper Functions
 
 **Frontend** (`src/utils/roles.js`):
 - `isParent(user)` — `family_role === 'parent'` or `role === 'admin'`
-- `isChild(user)` — true for child, teen, or toddler
+- `isChild(user)` — true for child or teen
 
 **Backend** (`functions/lib/shared-utils.ts`):
 - `isParent(user)` — same logic, also checks `user.data.family_role`
@@ -217,7 +216,7 @@ All validation utilities in `functions/lib/shared-utils.ts`:
 | Function | Purpose |
 |----------|---------|
 | `isValidEmail(email)` | Regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/` |
-| `isValidRole(role)` | Checks against `['parent', 'teen', 'child', 'toddler']` |
+| `isValidRole(role)` | Checks against `['parent', 'teen', 'child']` |
 | `sanitizeCode(code)` | Trim, uppercase, min length 6, rejects `<>'"\\` |
 | `sanitizeString(input, maxLength)` | Trim + truncate (default 500 chars) |
 | `parseRequestBody(req)` | Safe JSON parsing with structured error |

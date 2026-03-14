@@ -1,6 +1,8 @@
 /**
  * Centralized role constants and helpers.
  *
+ * Valid roles: parent, teen, child.
+ *
  * Use these instead of inline role checks like:
  *   user?.role === 'admin'
  *   user?.family_role === 'parent'
@@ -11,7 +13,6 @@ export const FAMILY_ROLES = {
   PARENT: 'parent',
   TEEN: 'teen',
   CHILD: 'child',
-  TODDLER: 'toddler',
 };
 
 /**
@@ -26,13 +27,11 @@ export function isParent(user) {
 }
 
 /**
- * Check if user is a child, teen, or toddler (non-parent family member).
- * Replaces inconsistent checks that sometimes missed 'teen' or 'toddler'.
+ * Check if user is a child or teen (non-parent family member).
  */
 export function isChild(user) {
   return (
     user?.family_role === FAMILY_ROLES.CHILD ||
-    user?.family_role === FAMILY_ROLES.TEEN ||
-    user?.family_role === FAMILY_ROLES.TODDLER
+    user?.family_role === FAMILY_ROLES.TEEN
   );
 }

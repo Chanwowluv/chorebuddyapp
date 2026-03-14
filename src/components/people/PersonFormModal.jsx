@@ -136,7 +136,6 @@ export default function PersonFormModal({
                       <SelectItem value="parent">👨‍👩‍ Parent</SelectItem>
                       <SelectItem value="teen">🧑‍🎓 Teen</SelectItem>
                       <SelectItem value="child">🧒 Child</SelectItem>
-                      <SelectItem value="toddler">👶 Toddler</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

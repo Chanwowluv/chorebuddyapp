@@ -20,7 +20,7 @@ const API_CONFIG = {
 const PERSON_FILTERABLE_FIELDS = [
   'name',
   'avatar_color',
-  'role',              // 'parent' | 'teen' | 'child' | 'toddler'
+  'role',              // 'parent' | 'teen' | 'child'
   'age',
   'preferred_categories',
   'avoided_categories',

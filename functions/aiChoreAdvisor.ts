@@ -82,8 +82,7 @@ const analyzeFamilyComposition = (people) => {
     const parents = people.filter(p => p.role === 'parent');
     const teens = people.filter(p => p.role === 'teen');
     const children = people.filter(p => p.role === 'child');
-    const toddlers = people.filter(p => p.role === 'toddler');
-    const kids = [...teens, ...children, ...toddlers];
+    const kids = [...teens, ...children];
 
     return {
         parent: parents.length,
@@ -91,12 +90,10 @@ const analyzeFamilyComposition = (people) => {
         breakdown: {
             teens: teens.length,
             children: children.length,
-            toddlers: toddlers.length
         },
         totalMembers: people.length,
         hasTeens: teens.length > 0,
         hasYoungChildren: children.length > 0,
-        hasToddlers: toddlers.length > 0
     };
 };
 
@@ -483,7 +480,6 @@ Deno.serve(async (req) => {
                     parent: composition.parent,
                     teens: composition.breakdown.teens,
                     children: composition.breakdown.children,
-                    toddlers: composition.breakdown.toddlers
                 },
                 completionRate,
                 existingChores: chores.length,
