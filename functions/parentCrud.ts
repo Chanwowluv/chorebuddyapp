@@ -145,6 +145,21 @@ Deno.serve(async (req) => {
       return forbiddenResponse(`Operation '${operation}' not allowed on '${entity}'`);
     }
 
+    if (entity === 'Person' && data && (operation === 'create' || operation === 'update')) {
+      if (data.preferred_categories) {
+        const { valid, invalid } = validateCategories(data.preferred_categories);
+        if (!valid) {
+          return errorResponse(`Invalid categories provided: ${invalid.join(', ')}. Valid options are: ${VALID_CHORE_CATEGORIES.join(', ')}`, 400, 'INVALID_CATEGORY');
+        }
+      }
+      if (data.avoided_categories) {
+        const { valid, invalid } = validateCategories(data.avoided_categories);
+        if (!valid) {
+          return errorResponse(`Invalid categories provided: ${invalid.join(', ')}. Valid options are: ${VALID_CHORE_CATEGORIES.join(', ')}`, 400, 'INVALID_CATEGORY');
+        }
+      }
+    }
+
     // 4. Get user's family ID
     const familyId = getUserFamilyId(user);
     if (!familyId) {
