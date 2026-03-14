@@ -12,8 +12,32 @@ const HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-function errorResponse(message, status = 400) {
-  return Response.json({ error: message }, { status, headers: HEADERS });
+function errorResponse(message, status = 400, code = undefined) {
+  const body = { error: message };
+  if (code) body.errorCode = code;
+  return Response.json(body, { status, headers: HEADERS });
+}
+
+const VALID_CHORE_CATEGORIES = [
+  "kitchen",
+  "bathroom",
+  "bedroom",
+  "laundry",
+  "outdoor",
+  "pets",
+  "dishes",
+  "vacuuming",
+  "organizing",
+  "trash",
+  "cooking",
+  "grocery",
+  "general"
+];
+
+function validateCategories(categories) {
+  if (!Array.isArray(categories)) return { valid: false, invalid: [] };
+  const invalid = categories.filter(c => !VALID_CHORE_CATEGORIES.includes(c));
+  return { valid: invalid.length === 0, invalid };
 }
 
 function successResponse(data, status = 200) {
