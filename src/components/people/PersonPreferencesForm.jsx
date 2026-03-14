@@ -7,10 +7,17 @@ import { Label } from "@/components/ui/label";
 const CATEGORIES = [
   { value: 'kitchen', label: '🍽️ Kitchen', color: 'text-orange-600' },
   { value: 'bathroom', label: '🚿 Bathroom', color: 'text-blue-600' },
-  { value: 'living_room', label: '🛋️ Living Room', color: 'text-purple-600' },
   { value: 'bedroom', label: '🛏️ Bedroom', color: 'text-pink-600' },
+  { value: 'laundry', label: '🧺 Laundry', color: 'text-purple-600' },
   { value: 'outdoor', label: '🌳 Outdoor', color: 'text-green-600' },
-  { value: 'other', label: '📋 Other', color: 'text-gray-600' }
+  { value: 'pets', label: '🐾 Pets', color: 'text-orange-500' },
+  { value: 'dishes', label: '🍽️ Dishes', color: 'text-blue-500' },
+  { value: 'vacuuming', label: '🧹 Vacuuming', color: 'text-gray-600' },
+  { value: 'organizing', label: '📦 Organizing', color: 'text-yellow-600' },
+  { value: 'trash', label: '🗑️ Trash', color: 'text-gray-700' },
+  { value: 'cooking', label: '🍳 Cooking', color: 'text-red-500' },
+  { value: 'grocery', label: '🛒 Grocery', color: 'text-green-700' },
+  { value: 'general', label: '📋 General', color: 'text-gray-600' }
 ];
 
 export default function PersonPreferencesForm({ formData, setFormData }) {
