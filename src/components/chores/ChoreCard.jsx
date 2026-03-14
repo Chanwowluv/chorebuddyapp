@@ -23,7 +23,7 @@ function ChoreCard({ assignment, chore, person, onComplete, user }) {
 
   return (
     <>
-      <div className={`funky-card-hover funky-card p-5 border-4 transition-all duration-200 ${chore.completed ? 'opacity-60 bg-gray-50' : 'bg-white'} ${CHORE_CATEGORY_COLORS[chore.category] || CHORE_CATEGORY_COLORS.other}`}>
+      <div className={`funky-card-hover funky-card p-5 border-4 transition-all duration-200 ${chore.completed ? 'opacity-60 bg-gray-50' : 'bg-white'} ${CHORE_CATEGORY_COLORS[chore.category] || CHORE_CATEGORY_COLORS.general}`}>
         <div className="flex items-start gap-4">
           {/* Checkbox */}
           <div className="flex-shrink-0 mt-1">
