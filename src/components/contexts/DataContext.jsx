@@ -872,7 +872,6 @@ export const DataProvider = ({ children }) => {
     items,
     goals,
     completions,
-    achievements,
     user,
     family,
     
