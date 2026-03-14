@@ -316,8 +316,7 @@ export const DataProvider = ({ children }) => {
         rewards: recentRewards.length,
         items: itemsData.length,
         goals: goalsData.length,
-        completions: recentCompletions.length,
-        achievements: achievementsData.length
+        completions: recentCompletions.length
       });
 
       // 7. Update state
@@ -328,7 +327,6 @@ export const DataProvider = ({ children }) => {
       setItems(itemsData);
       setGoals(goalsData);
       setCompletions(recentCompletions);
-      setAchievements(achievementsData);
 
       // 8. Cache data for offline use
       if (isOnline) {
