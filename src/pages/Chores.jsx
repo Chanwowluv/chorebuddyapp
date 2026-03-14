@@ -46,7 +46,7 @@ export default function Chores() {
     difficulty: "medium",
     frequency: "weekly",
     estimated_time: "",
-    category: "other",
+    category: "general",
     priority: "medium",
     is_recurring: false,
     recurrence_pattern: undefined,
