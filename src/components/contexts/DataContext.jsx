@@ -266,7 +266,6 @@ export const DataProvider = ({ children }) => {
       let itemsData = [];
       let goalsData = [];
       let completionsData = [];
-      let achievementsData = [];
 
       try {
         [
@@ -276,8 +275,7 @@ export const DataProvider = ({ children }) => {
           rewardsData,
           itemsData,
           goalsData,
-          completionsData,
-          achievementsData
+          completionsData
         ] = await Promise.all([
           base44.entities.Person.list().catch(() => []),
           base44.entities.Chore.list().catch(() => []),
@@ -285,8 +283,7 @@ export const DataProvider = ({ children }) => {
           base44.entities.Reward.list().catch(() => []),
           base44.entities.RedeemableItem.list().catch(() => []),
           base44.entities.FamilyGoal.list().catch(() => []),
-          base44.entities.ChoreCompletion.list().catch(() => []),
-          base44.entities.Achievement.list().catch(() => [])
+          base44.entities.ChoreCompletion.list().catch(() => [])
         ]);
       } catch (entityError) {
         console.error("[DataContext] Unexpected error fetching entities:", entityError);
