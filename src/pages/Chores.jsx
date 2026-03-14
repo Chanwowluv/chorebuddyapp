@@ -604,7 +604,7 @@ export default function Chores() {
       {chores.length > 0 ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {chores.map((chore) => (
-            <div key={chore.id} className={`funky-card p-4 md:p-6 lg:p-8 border-4 relative group ${CHORE_CATEGORY_COLORS[chore.category] || CHORE_CATEGORY_COLORS.other}`}>
+            <div key={chore.id} className={`funky-card p-4 md:p-6 lg:p-8 border-4 relative group ${CHORE_CATEGORY_COLORS[chore.category] || CHORE_CATEGORY_COLORS.general}`}>
               {isParent && (
                 <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <Button
