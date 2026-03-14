@@ -171,7 +171,6 @@ export const DataProvider = ({ children }) => {
         setItems([]);
         setGoals([]);
         setCompletions([]);
-        setAchievements([]);
         return;
       }
 
