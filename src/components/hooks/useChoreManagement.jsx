@@ -37,40 +37,20 @@ export const useChoreManagement = () => {
     // 3. Run API calls in background without awaiting them to block the UI
     (async () => {
       try {
-        const completionPromise = addCompletion({
-          assignment_id: assignmentId,
-          person_id: assignment.person_id,
-          chore_id: choreId,
-          completion_status: needsApproval ? 'pending_approval' : 'submitted',
-          points_awarded: needsApproval ? 0 : points,
+        const res = await base44.functions.invoke('submitChore', {
+          assignmentId,
+          choreId,
           notes: notes || '',
-          photo_url: photoUrl || '',
-          difficulty_rating: difficultyRating || undefined
+          photoUrl: photoUrl || '',
+          difficultyRating: difficultyRating || undefined
         });
-
-        const updatePromise = updateAssignment(assignmentId, {
-          completed: true,
-          completed_date: new Date().toISOString(),
-          approval_status: needsApproval ? 'pending' : undefined,
-          points_awarded: needsApproval ? 0 : points,
-          notes: notes || undefined,
-          photo_url: photoUrl || undefined
-        });
-
-        await Promise.all([completionPromise, updatePromise]);
-
-        if (!needsApproval) {
-          await addReward({
-            person_id: assignment.person_id,
-            chore_id: choreId,
-            points: points,
-            reward_type: "points",
-            week_start: assignment.week_start,
-            description: `Completed: ${chore.title}`
-          });
+        
+        if (res.error) {
+          throw new Error(res.error);
         }
       } catch (error) {
         console.error("Failed to complete chore:", error);
+        // If it fails, revert the optimistic UI (optional, but good practice)
       }
     })();
   }, [assignments, chores, updateAssignment, addReward, addCompletion]);
