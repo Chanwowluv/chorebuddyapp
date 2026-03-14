@@ -422,10 +422,17 @@ export default function Chores() {
                   <SelectContent>
                     <SelectItem value="kitchen">Kitchen</SelectItem>
                     <SelectItem value="bathroom">Bathroom</SelectItem>
-                    <SelectItem value="living_room">Living Room</SelectItem>
                     <SelectItem value="bedroom">Bedroom</SelectItem>
+                    <SelectItem value="laundry">Laundry</SelectItem>
                     <SelectItem value="outdoor">Outdoor</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="pets">Pets</SelectItem>
+                    <SelectItem value="dishes">Dishes</SelectItem>
+                    <SelectItem value="vacuuming">Vacuuming</SelectItem>
+                    <SelectItem value="organizing">Organizing</SelectItem>
+                    <SelectItem value="trash">Trash</SelectItem>
+                    <SelectItem value="cooking">Cooking</SelectItem>
+                    <SelectItem value="grocery">Grocery</SelectItem>
+                    <SelectItem value="general">General</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
