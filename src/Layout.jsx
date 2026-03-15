@@ -129,18 +129,7 @@ const navigationItems = [
   },
 ];
 
-const adminNavigationItems = [
-  {
-    title: "Admin",
-    url: createPageUrl("Admin"),
-    icon: CheckCircle,
-    color: "bg-[#5E3B85] text-white",
-    hover: "hover:bg-[#4a2d6b]",
-    active: "bg-[#4a2d6b]",
-    visibleTo: ["parent"],
-    mobileOrder: 11,
-  },
-];
+// Admin navigation removed
 
 const utilityNavItems = [
   {
@@ -382,13 +371,11 @@ function useFilteredNavItems(currentUser) {
       item.visibleTo.includes(userRole)
     );
 
-    const adminFiltered = isParent ? adminNavigationItems : [];
-
     // All items visible in sidebar
-    const sidebarItems = [...roleFiltered, ...adminFiltered];
+    const sidebarItems = [...roleFiltered];
 
     // Mobile: split into primary bar (items with mobileOrder) and overflow
-    const allMobileItems = [...roleFiltered, ...adminFiltered];
+    const allMobileItems = [...roleFiltered];
     const primaryMobile = allMobileItems
       .filter((item) => item.mobileOrder != null)
       .sort((a, b) => a.mobileOrder - b.mobileOrder);
