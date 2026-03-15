@@ -28,7 +28,19 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"), {
 });
 
 const handleCreateCheckoutSession = async (payload, user, base44, origin) => {
+    if (!payload || typeof payload !== 'object') {
+        return new Response(
+            JSON.stringify({ error: "Missing payload" }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
     const { planId, isYearly } = payload;
+    if (typeof planId !== 'string' || typeof isYearly !== 'boolean') {
+        return new Response(
+            JSON.stringify({ error: "Invalid input types" }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
     if (!PLAN_PRICE_IDS[planId]) {
         return new Response(JSON.stringify({ error: "Invalid plan ID" }), { status: 400 });
     }
