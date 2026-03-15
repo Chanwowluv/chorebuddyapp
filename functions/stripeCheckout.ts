@@ -118,19 +118,23 @@ const handleWebhook = async (req, base44) => {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
-                const userId = session.subscription?.metadata?.base44_user_id || session.metadata?.base44_user_id;
-                
-                if (userId && session.customer) {
-                    const subscription = await stripe.subscriptions.retrieve(session.subscription);
-                    const priceId = subscription.items.data[0].price.id;
-                    const planInfo = REVERSE_PRICE_MAP[priceId];
-                    
-                    await adminBase44.entities.User.update(userId, {
-                        stripe_customer_id: session.customer,
-                        subscription_tier: planInfo?.tier || 'free',
-                        subscription_status: subscription.status,
-                    });
+                if (!session.subscription || !session.customer) break;
+
+                const subscription = await stripe.subscriptions.retrieve(session.subscription);
+                const userId = subscription.metadata?.base44_user_id;
+                if (!userId) {
+                    console.error('checkout.session.completed: No base44_user_id in subscription metadata');
+                    break;
                 }
+
+                const priceId = subscription.items.data[0].price.id;
+                const planInfo = REVERSE_PRICE_MAP[priceId];
+
+                await adminBase44.entities.User.update(userId, {
+                    stripe_customer_id: session.customer,
+                    subscription_tier: planInfo?.tier || 'free',
+                    subscription_status: subscription.status,
+                });
                 break;
             }
             case 'customer.subscription.created': {
