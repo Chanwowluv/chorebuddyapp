@@ -409,7 +409,7 @@ function AppLayout({
 
   // Define root paths for transition logic
   const rootPaths = useMemo(() => {
-    const allItems = [...navigationItems, ...adminNavigationItems, ...utilityNavItems];
+    const allItems = [...navigationItems, ...utilityNavItems];
     return new Set(allItems.map(item => item.url).concat(['/']));
   }, []);
 
