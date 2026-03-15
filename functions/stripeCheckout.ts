@@ -126,6 +126,13 @@ const handleWebhook = async (req, base44) => {
 
     const adminBase44 = base44.asServiceRole;
 
+    const findUserByStripeCustomer = async (stripeCustomerId) => {
+        const users = await adminBase44.entities.User.filter({
+            stripe_customer_id: stripeCustomerId
+        });
+        return users?.[0] || null;
+    };
+
     try {
         switch (event.type) {
             case 'checkout.session.completed': {
@@ -151,73 +158,63 @@ const handleWebhook = async (req, base44) => {
             }
             case 'customer.subscription.created': {
                 const subscription = event.data.object;
-                const users = await adminBase44.entities.User.filter({ stripe_customer_id: subscription.customer });
+                const user = await findUserByStripeCustomer(subscription.customer);
+                if (!user) break;
+
+                const priceId = subscription.items.data[0].price.id;
+                const planInfo = REVERSE_PRICE_MAP[priceId];
                 
-                if (users && users.length > 0) {
-                    const user = users[0];
-                    const priceId = subscription.items.data[0].price.id;
-                    const planInfo = REVERSE_PRICE_MAP[priceId];
-                    
-                    await adminBase44.entities.User.update(user.id, {
-                        subscription_tier: planInfo?.tier || 'free',
-                        subscription_status: subscription.status,
-                    });
-                }
+                await adminBase44.entities.User.update(user.id, {
+                    subscription_tier: planInfo?.tier || 'free',
+                    subscription_status: subscription.status,
+                });
                 break;
             }
             case 'customer.subscription.updated': {
                 const subscription = event.data.object;
-                const users = await adminBase44.entities.User.filter({ stripe_customer_id: subscription.customer });
+                const user = await findUserByStripeCustomer(subscription.customer);
+                if (!user) break;
+
+                const priceId = subscription.items.data[0].price.id;
+                const planInfo = REVERSE_PRICE_MAP[priceId];
                 
-                if (users && users.length > 0) {
-                    const user = users[0];
-                    const priceId = subscription.items.data[0].price.id;
-                    const planInfo = REVERSE_PRICE_MAP[priceId];
-                    
-                    await adminBase44.entities.User.update(user.id, {
-                        subscription_tier: planInfo?.tier || user.subscription_tier,
-                        subscription_status: subscription.status,
-                    });
-                }
+                await adminBase44.entities.User.update(user.id, {
+                    subscription_tier: planInfo?.tier || user.subscription_tier,
+                    subscription_status: subscription.status,
+                });
                 break;
             }
             case 'customer.subscription.deleted': {
                 const subscription = event.data.object;
-                const users = await adminBase44.entities.User.filter({ stripe_customer_id: subscription.customer });
-                
-                if (users && users.length > 0) {
-                    const user = users[0];
-                    await adminBase44.entities.User.update(user.id, {
-                        subscription_tier: 'free',
-                        subscription_status: 'canceled',
-                    });
-                }
+                const user = await findUserByStripeCustomer(subscription.customer);
+                if (!user) break;
+
+                await adminBase44.entities.User.update(user.id, {
+                    subscription_tier: 'free',
+                    subscription_status: 'canceled',
+                });
                 break;
             }
             case 'invoice.payment_failed': {
                 const invoice = event.data.object;
-                const users = await adminBase44.entities.User.filter({ stripe_customer_id: invoice.customer });
-                
-                if (users && users.length > 0) {
-                    const user = users[0];
-                    await adminBase44.entities.User.update(user.id, {
-                        subscription_status: 'past_due',
-                    });
-                }
+                const user = await findUserByStripeCustomer(invoice.customer);
+                if (!user) break;
+
+                await adminBase44.entities.User.update(user.id, {
+                    subscription_status: 'past_due',
+                });
                 break;
             }
             case 'invoice.payment_succeeded': {
                 const invoice = event.data.object;
-                const users = await adminBase44.entities.User.filter({ stripe_customer_id: invoice.customer });
-                
-                if (users && users.length > 0) {
-                    const user = users[0];
-                    if (invoice.subscription) {
-                        const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
-                        await adminBase44.entities.User.update(user.id, {
-                            subscription_status: subscription.status,
-                        });
-                    }
+                const user = await findUserByStripeCustomer(invoice.customer);
+                if (!user) break;
+
+                if (invoice.subscription) {
+                    const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+                    await adminBase44.entities.User.update(user.id, {
+                        subscription_status: subscription.status,
+                    });
                 }
                 break;
             }
