@@ -101,6 +101,10 @@ function logError(context, error, metadata) {
   });
 }
 
+function logAudit(entry) {
+  console.log(JSON.stringify({ level: 'AUDIT', ...entry, ts: new Date().toISOString() }));
+}
+
 function logInfo(context, message, metadata) {
   console.log(`[INFO] ${context}:`, message, metadata || '');
 }
@@ -168,11 +172,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      logInfo('parentCrud', 'Role changed', {
-        personId,
-        oldRole: person.role,
-        newRole,
-        changedBy: user.id,
+      logAudit({
+        action: 'ROLE_CHANGE',
+        actor_id: user.id,
+        target_id: personId,
+        family_id: familyId,
+        details: { oldRole: person.role, newRole },
       });
 
       return successResponse({ personId, oldRole: person.role, newRole });

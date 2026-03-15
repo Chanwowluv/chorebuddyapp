@@ -200,6 +200,10 @@ Deno.serve(async (req) => {
       return errorResponse('Invalid role. Must be parent, teen, or child');
     }
 
+    if (role === 'parent') {
+      return errorResponse('Cannot invite as parent. Only family creators can be parents.');
+    }
+
     // Send email invitation
     return await handleEmailInvitation(base44, user, familyId, email, name, role, env);
   } catch (error) {
