@@ -220,7 +220,7 @@ const handleWebhook = async (req, base44) => {
             }
         }
     } catch (error) {
-        console.error(`Webhook handler error for ${event.type}:`, error);
+        console.error(`Webhook error for ${event.type} (event.id: ${event.id}):`, error?.message || error);
     }
     
     return new Response(JSON.stringify({ received: true }), { status: 200 });
