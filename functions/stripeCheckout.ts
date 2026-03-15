@@ -27,6 +27,8 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"), {
   httpClient: Stripe.createFetchHttpClient()
 });
 
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://chorebuddyapp.com";
+
 const handleCreateCheckoutSession = async (payload, user, base44, origin) => {
     if (!payload || typeof payload !== 'object') {
         return new Response(
@@ -51,8 +53,8 @@ const handleCreateCheckoutSession = async (payload, user, base44, origin) => {
         return new Response(JSON.stringify({ error: "This plan is not available." }), { status: 500 });
     }
     
-    const successUrl = `https://chorebuddyapp.com/PaymentSuccess`;
-    const cancelUrl = `https://chorebuddyapp.com/PaymentCancel`;
+    const successUrl = `${APP_BASE_URL}/PaymentSuccess`;
+    const cancelUrl = `${APP_BASE_URL}/PaymentCancel`;
     
     let stripeCustomerId = user.stripe_customer_id;
     if (!stripeCustomerId) {
@@ -103,7 +105,7 @@ const handleCreatePortalSession = async (user, base44, origin) => {
         return new Response(JSON.stringify({ error: "No customer ID found" }), { status: 400 });
     }
     
-    const returnUrl = `https://chorebuddyapp.com/Account`;
+    const returnUrl = `${APP_BASE_URL}/Account`;
     const portalSession = await stripe.billingPortal.sessions.create({
         customer: user.stripe_customer_id,
         return_url: returnUrl,
