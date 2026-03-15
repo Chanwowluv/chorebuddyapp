@@ -50,6 +50,17 @@ Deno.serve(async (req) => {
       linked_person_id: parentPerson.id
     });
 
+    await base44.asServiceRole.entities.AuditLog.create({
+      timestamp: new Date().toISOString(),
+      user_id: user.id,
+      action: 'family_created',
+      old_value: null,
+      new_value: newFamily.id,
+      family_id: newFamily.id,
+      performed_by_user_id: user.id,
+      details: { person_id: parentPerson.id, role: 'parent' }
+    });
+
     return Response.json({ success: true, familyId: newFamily.id });
   } catch (error) {
     console.error("Error creating family:", error);

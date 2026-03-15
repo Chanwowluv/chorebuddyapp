@@ -594,6 +594,11 @@ Deno.serve(async (req: Request) => {
 
     const { inviteCode, role = 'child' } = body as { inviteCode?: string; role?: string };
 
+    const rateLimit = checkRateLimit(user!.id, 'join_family', 5, 10 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      return typedErrorResponse('RATE_LIMITED', 'Too many join attempts. Please try again later.');
+    }
+
     const { valid: codeValid, code: sanitizedCode, error: codeError } = sanitizeCode(inviteCode);
     if (!codeValid) return typedErrorResponse('INVALID_CODE', codeError ?? 'Invalid invite code format');
 
@@ -642,6 +647,20 @@ Deno.serve(async (req: Request) => {
       userId: user!.id,
       familyId: family.id,
       personId: joinResult.person!.id,
+    });
+
+    await base44.asServiceRole.entities.AuditLog.create({
+      timestamp: new Date().toISOString(),
+      user_id: user!.id,
+      action: 'family_joined',
+      old_value: user!.family_id || null,
+      new_value: family.id,
+      family_id: family.id,
+      performed_by_user_id: user!.id,
+      details: {
+        person_id: joinResult.person!.id,
+        role: joinResult.person!.role
+      }
     });
 
     return successResponse({

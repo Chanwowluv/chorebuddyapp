@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     const { data: body, error: parseError } = await parseRequestBody(req);
     if (parseError) return parseError;
 
-    const { entity, operation, data, id } = body;
+    const { entity, operation, data, id, family_id: reqFamilyId } = body;
 
     // 3. Validate entity + operation against whitelist
     if (!entity || !operation) {
@@ -161,7 +161,10 @@ Deno.serve(async (req) => {
     }
 
     // 4. Get user's family ID
-    const familyId = getUserFamilyId(user);
+    let familyId = getUserFamilyId(user);
+    if (user.role === 'admin' && reqFamilyId) {
+      familyId = reqFamilyId;
+    }
     if (!familyId) {
       return errorResponse('User is not part of any family');
     }
@@ -187,6 +190,20 @@ Deno.serve(async (req) => {
         });
 
         logInfo('parentCrud', `Created ${entity}`, { id: record.id, userId: user.id });
+        
+        if (entity === 'Person') {
+          await entities.AuditLog.create({
+            timestamp: new Date().toISOString(),
+            user_id: record.linked_user_id || 'unlinked',
+            action: 'person_created',
+            old_value: null,
+            new_value: record.role,
+            family_id: familyId,
+            performed_by_user_id: user.id,
+            details: { person_id: record.id }
+          });
+        }
+        
         return successResponse({ record });
       }
 
@@ -203,6 +220,20 @@ Deno.serve(async (req) => {
 
         const updated = await entities[entity].update(id, data);
         logInfo('parentCrud', `Updated ${entity}`, { id, userId: user.id });
+        
+        if (entity === 'Person' && data.role && existing.role !== data.role) {
+          await entities.AuditLog.create({
+            timestamp: new Date().toISOString(),
+            user_id: updated.linked_user_id || 'unlinked',
+            action: 'role_changed',
+            old_value: existing.role,
+            new_value: data.role,
+            family_id: familyId,
+            performed_by_user_id: user.id,
+            details: { person_id: updated.id }
+          });
+        }
+        
         return successResponse({ record: updated });
       }
 

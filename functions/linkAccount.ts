@@ -540,6 +540,18 @@ async function handleParentLink(base44: Base44Client, user: AppUser, personId: s
   }
 
   logInfo(CALLER, 'Parent linked account to person', { userId: user.id, personId });
+  
+  await base44.asServiceRole.entities.AuditLog.create({
+    timestamp: new Date().toISOString(),
+    user_id: user.id,
+    action: 'person_linked',
+    old_value: null,
+    new_value: personId,
+    family_id: person.family_id,
+    performed_by_user_id: user.id,
+    details: { method: 'parent_link' }
+  });
+  
   return successResponse({ message: 'Successfully linked your account!', personId, personName: person.name });
 }
 
@@ -671,6 +683,18 @@ async function linkUserToPerson(
   }
 
   logInfo(CALLER, `${callerContext}: user linked to person`, { userId: user.id, personId: person.id });
+  
+  await base44.asServiceRole.entities.AuditLog.create({
+    timestamp: new Date().toISOString(),
+    user_id: user.id,
+    action: 'person_linked',
+    old_value: null,
+    new_value: person.id,
+    family_id: person.family_id,
+    performed_by_user_id: user.id,
+    details: { method: callerContext }
+  });
+  
   return successResponse({
     message: 'Successfully linked your account!',
     personId: person.id,

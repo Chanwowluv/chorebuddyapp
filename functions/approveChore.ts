@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { assignment_id } = await req.json();
+    const { assignment_id, family_id } = await req.json();
     if (!assignment_id) {
       return Response.json({ error: 'assignment_id is required' }, { status: 400 });
     }
@@ -40,8 +40,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Assignment not found' }, { status: 404 });
     }
 
-    if (assignment.family_id !== user.family_id && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    if (assignment.family_id !== user.family_id) {
+      if (user.role !== 'admin' || assignment.family_id !== family_id) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     if (assignment.approval_status === 'approved') {
