@@ -525,7 +525,7 @@ async function handleParentLink(base44: Base44Client, user: AppUser, personId: s
   }
 
   try {
-    await base44.auth.updateMe({ linked_person_id: personId });
+    await base44.asServiceRole.entities.User.update(user.id, { linked_person_id: personId });
   } catch (err) {
     logError(CALLER, err, { context: 'handleParentLink_updateMe', userId: user.id, personId });
     try {
@@ -656,7 +656,7 @@ async function linkUserToPerson(
   }
 
   try {
-    await base44.auth.updateMe({ linked_person_id: person.id });
+    await base44.asServiceRole.entities.User.update(user.id, { linked_person_id: person.id });
   } catch (err) {
     logError(CALLER, err, { context: `${callerContext}_updateMe`, userId: user.id, personId: person.id });
     try {

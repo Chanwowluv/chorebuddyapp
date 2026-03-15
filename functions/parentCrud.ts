@@ -173,6 +173,13 @@ Deno.serve(async (req) => {
       case 'create': {
         if (!data) return errorResponse('Missing data for create');
 
+        if (entity === 'Person') {
+          const validRoles = ['parent', 'teen', 'child'];
+          if (!validRoles.includes(data.role)) {
+            return errorResponse('Invalid role specified', 400);
+          }
+        }
+
         const record = await entities[entity].create({
           ...data,
           family_id: familyId,   // Server enforces family scoping

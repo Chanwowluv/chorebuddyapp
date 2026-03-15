@@ -77,56 +77,24 @@ export const DataProvider = ({ children }) => {
     
     initializeFamilyRef.current = (async () => {
       try {
-        // Create family (linking code generated via backend familyLinking function)
-        const newFamily = await base44.entities.Family.create({
-          name: `${userData.full_name || 'My'}'s Family`,
-          owner_user_id: userData.id,
-          members: [userData.id],
-          member_count: 1,
-          subscription_tier: userData.subscription_tier || 'free',
-          subscription_status: 'active',
-          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-          currency: 'USD',
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+        const response = await base44.functions.invoke('createFamily', {
+          subscription_tier: userData.subscription_tier || 'free'
         });
+        
+        if (!response.data?.success) {
+          throw new Error(response.data?.error || "Failed to create family");
+        }
 
-        console.log("[DataContext] Family created:", newFamily.id);
-
-        // Auto-create a Person record for the parent so they appear
-        // as a family member immediately (no manual linking needed)
-        const parentPerson = await base44.entities.Person.create({
-          name: userData.full_name || 'Parent',
-          family_id: newFamily.id,
-          linked_user_id: userData.id,
-          family_name: newFamily.name,
-          role: 'parent',
-          is_active: true,
-          points_balance: 0,
-          total_points_earned: 0,
-          chores_completed_count: 0,
-          current_streak: 0,
-          best_streak: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-        console.log("[DataContext] Parent person created:", parentPerson.id);
-
-        // Update user with family_id
-        await base44.auth.updateMe({
-          family_id: newFamily.id,
-          family_role: 'parent'
-        });
-
-        console.log("[DataContext] User linked to family:", newFamily.id);
+        const familyId = response.data.familyId;
+        console.log("[DataContext] Family created securely:", familyId);
+        
         familyInitializedRef.current = true;
-
-        // Set family state
+        
+        // Fetch the newly created family to set in state
+        const newFamily = await base44.entities.Family.get(familyId);
         setFamily(newFamily);
 
-        return newFamily.id;
+        return familyId;
       } catch (error) {
         console.error("[DataContext] Error creating family:", error);
         initializeFamilyRef.current = null;
