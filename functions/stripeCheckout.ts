@@ -143,7 +143,7 @@ const handleWebhook = async (req, base44) => {
                     const planInfo = REVERSE_PRICE_MAP[priceId];
                     
                     await adminBase44.entities.User.update(user.id, {
-                        subscription_tier: planInfo?.tier || 'premium',
+                        subscription_tier: planInfo?.tier || 'free',
                         subscription_status: subscription.status,
                     });
                 }
