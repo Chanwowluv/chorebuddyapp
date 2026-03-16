@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listForFamily } from '@/components/utils/entityHelpers';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import { Link } from 'react-router-dom';
 import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';

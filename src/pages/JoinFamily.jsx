@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Loader2, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { joinFamilyByInviteCode } from '@/components/utils/familyLinkingClient';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 
 // Constants
 const REQUIRED_PARAMS = ['code', 'email', 'name'];

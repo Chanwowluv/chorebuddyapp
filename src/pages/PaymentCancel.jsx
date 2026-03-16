@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import { XCircle, ArrowLeft } from 'lucide-react';
 
 export default function PaymentCancel() {

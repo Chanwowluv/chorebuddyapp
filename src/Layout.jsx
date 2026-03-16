@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { createPageUrl } from "@/utils";
+import { createPageUrl } from "@/components/lib/navigation";
 import {
   Home, Users, ClipboardList, Calendar, Sparkles, Zap,
   Settings, Loader2, Target, CheckCircle, MessageCircle,

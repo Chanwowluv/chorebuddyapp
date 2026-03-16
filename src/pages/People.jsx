@@ -3,7 +3,7 @@ import { useData } from '../components/contexts/DataContext';
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Mail, Zap } from "lucide-react";
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import { toast } from "sonner";
 import { ListSkeleton } from '../components/ui/SkeletonLoader';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';

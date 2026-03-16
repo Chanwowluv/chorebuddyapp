@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import LimitReachedModal from "../components/ui/LimitReachedModal";
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import EnhancedAssignmentModal from "../components/chores/EnhancedAssignmentModal";
 import BulkAssignmentModal from "../components/chores/BulkAssignmentModal";
 import AISuggestionsModal from "../components/ai/AISuggestionsModal";

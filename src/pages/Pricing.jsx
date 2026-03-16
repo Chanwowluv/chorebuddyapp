@@ -5,7 +5,7 @@ import { Loader2, Star, ShieldCheck, AlertCircle, Users } from 'lucide-react';
 import PlanCard from '../components/pricing/PlanCard';
 // stripeCheckout requires backend functions - graceful degradation below
 import { toast } from 'sonner';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 
 const plans = [
   {

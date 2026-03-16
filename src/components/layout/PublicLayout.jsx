@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import { base44 } from '@/api/base44Client';
 import { setCookie, getCookie } from '../utils/cookies';
 import { useAuth } from '@/lib/AuthContext';
