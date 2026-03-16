@@ -4,7 +4,7 @@ import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { base44 } from '@/api/base44Client';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 
 const tourSteps = [
   {
