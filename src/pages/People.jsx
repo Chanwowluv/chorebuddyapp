@@ -3,7 +3,7 @@ import { useData } from '../components/contexts/DataContext';
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Mail, Zap } from "lucide-react";
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/components/lib/navigation';
+import { createPageUrl } from '@/utils';
 import { toast } from "sonner";
 import { ListSkeleton } from '../components/ui/SkeletonLoader';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
@@ -16,7 +16,7 @@ import LinkAccountModal from "../components/people/LinkAccountModal";
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import LimitReachedModal from "../components/ui/LimitReachedModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 
 // Constants
 const TOAST_MESSAGES = {
@@ -240,7 +240,7 @@ export default function People() {
     setIsLinking(true);
     
     try {
-      const { linkAccountToParent } = await import('@/components/utils/familyLinkingClient');
+      const { linkAccountToParent } = await import('@/utils/familyLinkingClient');
       await linkAccountToParent(personId);
       toast.success(TOAST_MESSAGES.ACCOUNT_LINKED);
       closeModal('link', 'personToLink');
@@ -292,7 +292,7 @@ export default function People() {
     if (!personToUnlink) return;
 
     try {
-      const { unlinkAccount } = await import('@/components/utils/familyLinkingClient');
+      const { unlinkAccount } = await import('@/utils/familyLinkingClient');
       await unlinkAccount(personToUnlink.id);
       toast.success(`${personToUnlink.name}'s account has been unlinked`);
       await fetchData();

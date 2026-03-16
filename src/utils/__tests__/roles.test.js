@@ -6,6 +6,7 @@ describe('FAMILY_ROLES', () => {
     expect(FAMILY_ROLES.PARENT).toBe('parent');
     expect(FAMILY_ROLES.TEEN).toBe('teen');
     expect(FAMILY_ROLES.CHILD).toBe('child');
+    expect(FAMILY_ROLES.TODDLER).toBe('toddler');
   });
 });
 
@@ -15,11 +16,11 @@ describe('isParent', () => {
   });
 
   it('should return true for admin role', () => {
-    expect(isParent({ role: 'user' })).toBe(true);
+    expect(isParent({ role: 'admin' })).toBe(true);
   });
 
-  it('should return true when user has both user role and parent family_role', () => {
-    expect(isParent({ role: 'user', family_role: 'parent' })).toBe(true);
+  it('should return true when user has both admin role and parent family_role', () => {
+    expect(isParent({ role: 'admin', family_role: 'parent' })).toBe(true);
   });
 
   it('should return false for child role', () => {

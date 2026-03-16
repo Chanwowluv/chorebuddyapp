@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 import { Home } from 'lucide-react';
 
 export default function PageNotFound({}) {

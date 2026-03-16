@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { stripHTMLTags } from '@/components/lib/sanitization';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 
 export default function NoticeBoard() {
   const [notices, setNotices] = useState([]);

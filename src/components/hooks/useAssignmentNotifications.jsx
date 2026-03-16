@@ -1,5 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { Person } from '@/entities/Person';
+import { Chore } from '@/entities/Chore';
+import { Assignment } from '@/entities/Assignment';
+import { listForFamily } from '@/utils/entityHelpers';
 import { toast } from 'sonner';
 
 /**
@@ -20,8 +23,8 @@ export function useAssignmentNotifications(familyId, enabled = true) {
 
     try {
       const [people, chores] = await Promise.all([
-        base44.entities.Person.filter({ family_id: familyId }),
-        base44.entities.Chore.filter({ family_id: familyId })
+        listForFamily(Person, familyId),
+        listForFamily(Chore, familyId)
       ]);
 
       // Build lookup maps
@@ -44,7 +47,7 @@ export function useAssignmentNotifications(familyId, enabled = true) {
     if (!familyId || !enabled || !isActiveRef.current) return;
 
     try {
-      const assignments = await base44.entities.Assignment.filter({ family_id: familyId });
+      const assignments = await listForFamily(Assignment, familyId, '-created_date');
 
       // Skip notification on first load (just initialize the cache)
       if (!initializedRef.current) {

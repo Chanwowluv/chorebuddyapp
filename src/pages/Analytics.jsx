@@ -2,7 +2,7 @@ import React from 'react';
 import { useData } from '../components/contexts/DataContext';
 import { TrendingUp, Loader2 } from 'lucide-react';
 import AnalyticsDashboard from '../components/analytics/AnalyticsDashboard';
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 
 export default function Analytics() {
   const { loading, user } = useData();

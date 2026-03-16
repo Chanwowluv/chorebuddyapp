@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/components/lib/navigation';
+import { createPageUrl } from '@/utils';
 import { ChevronRight, Award, Flame, AlertCircle } from 'lucide-react';
 
 const LEVEL_THRESHOLDS = [

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
 import { useData } from '../contexts/DataContext';
 import { calculateChorePoints } from '../lib/pointsCalculator';
 

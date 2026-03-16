@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/components/lib/navigation";
+import { createPageUrl } from "@/utils";
 
 export default function QuickActions() {
   return (

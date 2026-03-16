@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useData } from '../components/contexts/DataContext';
-import { base44 } from "@/api/base44Client";
+import { FamilyGoal } from "@/entities/FamilyGoal";
 import { Button } from "@/components/ui/button";
 import { Plus, Target, Trophy } from "lucide-react";
 import { parseISO, isAfter } from "date-fns";
@@ -12,7 +12,7 @@ import GoalFormModal from "../components/goals/GoalFormModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import FeatureGate from "../components/ui/FeatureGate";
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 
 export default function Goals() {
   const { people, rewards, goals, user, loading, addGoal, updateGoal, deleteGoal, refresh } = useData();
@@ -42,11 +42,11 @@ export default function Goals() {
       );
 
       for (const goal of updates) {
-        await base44.entities.FamilyGoal.update(goal.id, { current_points: familyPoints });
+        await FamilyGoal.update(goal.id, { current_points: familyPoints });
 
         // Check if goal is completed
         if (familyPoints >= goal.target_points) {
-          await base44.entities.FamilyGoal.update(goal.id, {
+          await FamilyGoal.update(goal.id, {
             status: 'completed',
             completed_date: new Date().toISOString()
           });
@@ -61,7 +61,7 @@ export default function Goals() {
       );
 
       for (const goal of expiredGoals) {
-        await base44.entities.FamilyGoal.update(goal.id, { status: 'expired' });
+        await FamilyGoal.update(goal.id, { status: 'expired' });
       }
 
       // Refresh DataContext to pick up changes

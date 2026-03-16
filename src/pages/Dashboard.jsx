@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useReducer } from "react";
-import { smartAssignChores } from "@/components/utils/smartAssignClient";
+import { smartAssignChores } from "@/utils/smartAssignClient";
 import { format, startOfWeek } from "date-fns";
 import { useData } from "../components/contexts/DataContext";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import LevelProgressCard from "../components/dashboard/LevelProgressCard";
 import StreakDisplay from "../components/dashboard/StreakDisplay";
 import BadgeCollection from "../components/dashboard/BadgeCollection";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
-import { isParent as checkParent, isChild as checkChild } from "@/components/lib/roles";
+import { isParent as checkParent, isChild as checkChild } from "@/utils/roles";
 import ErrorBoundaryWithRetry from "../components/ui/ErrorBoundaryWithRetry";
 import PullToRefresh from "../components/ui/PullToRefresh";
 

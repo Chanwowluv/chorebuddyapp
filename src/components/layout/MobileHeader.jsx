@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Sparkles, ChevronLeft } from 'lucide-react';
-import { createPageUrl } from '@/components/lib/navigation';
+import { createPageUrl } from '@/utils';
 
 // Root pages reachable directly from bottom navigation
 const ROOT_PAGE_PATHS = [

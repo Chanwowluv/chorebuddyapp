@@ -3,7 +3,7 @@ import { useData } from '../components/contexts/DataContext';
 import { BookOpen, Loader2 } from 'lucide-react';
 import TemplateLibrary from '../components/templates/TemplateLibrary';
 import { toast } from 'sonner';
-import { isParent as checkParent } from '@/components/lib/roles';
+import { isParent as checkParent } from '@/utils/roles';
 
 export default function Templates() {
   const { loading, addChore, user } = useData();

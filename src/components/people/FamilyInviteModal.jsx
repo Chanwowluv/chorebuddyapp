@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Mail, Link as LinkIcon, Copy } from "lucide-react";
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from "sonner";
-import { generateLinkingCode } from '@/components/utils/familyLinkingClient';
+import { generateLinkingCode } from '@/utils/familyLinkingClient';
 import { base44 } from '@/api/base44Client';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format } from 'date-fns';

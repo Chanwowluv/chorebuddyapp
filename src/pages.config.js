@@ -49,6 +49,7 @@
  */
 import Account from './pages/Account';
 import Achievements from './pages/Achievements';
+import Admin from './pages/Admin';
 import Analytics from './pages/Analytics';
 import ApprovalQueue from './pages/ApprovalQueue';
 import Challenges from './pages/Challenges';
@@ -82,6 +83,7 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "Account": Account,
     "Achievements": Achievements,
+    "Admin": Admin,
     "Analytics": Analytics,
     "ApprovalQueue": ApprovalQueue,
     "Challenges": Challenges,

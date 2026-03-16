@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/components/lib/navigation';
+import { Family } from '@/entities/Family';
+import { createPageUrl } from '@/utils';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +19,9 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { generateLinkingCode as generateLinkingCodeClient, joinFamilyByCode } from '@/components/utils/familyLinkingClient';
-import { isParent as checkParent } from '@/components/lib/roles';
-import { getMemberLimit, formatTier } from '@/components/constants/subscriptionTiers';
+import { generateLinkingCode as generateLinkingCodeClient, joinFamilyByCode } from '@/utils/familyLinkingClient';
+import { isParent as checkParent } from '@/utils/roles';
+import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
 
 // Error code to user-friendly message mapping for join errors
 const LINKING_ERROR_MESSAGES = {
@@ -78,7 +79,7 @@ export default function FamilyLinking() {
 
                 // For parents/admins, fetch their family data
                 if (checkParent(userData) && userData.family_id) {
-                    const familyData = await base44.entities.Family.get(userData.family_id);
+                    const familyData = await Family.get(userData.family_id);
                     if (familyData) {
                         setFamily(familyData);
                         if (familyData.linking_code) {

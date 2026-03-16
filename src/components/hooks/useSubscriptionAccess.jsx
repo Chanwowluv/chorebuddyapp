@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { SUBSCRIPTION_FEATURES, formatTier } from '@/components/constants/subscriptionTiers';
+import { SUBSCRIPTION_FEATURES, formatTier } from '@/constants/subscriptionTiers';
 
 export const useSubscriptionAccess = () => {
   const { user, people, items, chores } = useData();

@@ -2,7 +2,7 @@ import React from "react";
 import { AlertCircle } from "lucide-react";
 import ChoreCard from "../chores/ChoreCard";
 import SimpleChoreCard from "../chores/SimpleChoreCard";
-import { isParent as checkParent, isChild } from '@/components/lib/roles';
+import { isParent as checkParent, isChild } from '@/utils/roles';
 
 export default function ChoresSection({ pendingAssignments = [], completedAssignments = [], chores = [], people = [], completeChore, user, isParent = true }) {
   const useSimplified = user?.simplified_view || (isChild(user) && user?.simplified_view !== false);

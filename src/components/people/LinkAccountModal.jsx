@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Link as LinkIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { linkAccountByCode, linkAccountBySelection } from "@/components/utils/familyLinkingClient";
+import { linkAccountByCode, linkAccountBySelection } from "@/utils/familyLinkingClient";
 import { toast } from "sonner";
 
 export default function LinkAccountModal({ isOpen, onClose, onLink, isProcessing: externalIsProcessing }) {
