@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { User } from '@/entities/User';
+import { base44 } from '@/api/base44Client';
 import { setCookie, getCookie } from '../utils/cookies';
 import { useAuth } from '@/lib/AuthContext';
 
