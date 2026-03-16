@@ -11,7 +11,6 @@ export const FAMILY_ROLES = {
   PARENT: 'parent',
   TEEN: 'teen',
   CHILD: 'child',
-  TODDLER: 'toddler',
 };
 
 /**
