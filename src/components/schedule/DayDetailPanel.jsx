@@ -5,6 +5,7 @@ import { X, CheckCircle, Clock, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AVATAR_COLORS, DIFFICULTY_STARS } from '@/components/lib/constants';
 import { sanitizeHTML } from '@/components/lib/sanitization';
+import { isParent as checkParent, isChild as checkChild } from '@/components/lib/roles';
 
 export default function DayDetailPanel({
   selectedDate,
