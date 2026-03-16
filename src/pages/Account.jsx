@@ -119,7 +119,7 @@ export default function Account() {
           }
 
           // Fetch family people (scoped to user's family)
-          const familyPeople = await listForFamily(Person, userData.family_id);
+          const familyPeople = await listForFamily(base44.entities.Person, userData.family_id);
           setPeople(familyPeople);
 
           // Find linked person
