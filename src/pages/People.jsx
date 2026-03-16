@@ -240,7 +240,7 @@ export default function People() {
     setIsLinking(true);
     
     try {
-      const { linkAccountToParent } = await import('@/utils/familyLinkingClient');
+      const { linkAccountToParent } = await import('@/components/utils/familyLinkingClient');
       await linkAccountToParent(personId);
       toast.success(TOAST_MESSAGES.ACCOUNT_LINKED);
       closeModal('link', 'personToLink');
@@ -292,7 +292,7 @@ export default function People() {
     if (!personToUnlink) return;
 
     try {
-      const { unlinkAccount } = await import('@/utils/familyLinkingClient');
+      const { unlinkAccount } = await import('@/components/utils/familyLinkingClient');
       await unlinkAccount(personToUnlink.id);
       toast.success(`${personToUnlink.name}'s account has been unlinked`);
       await fetchData();

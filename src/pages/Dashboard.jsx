@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useReducer } from "react";
-import { smartAssignChores } from "@/utils/smartAssignClient";
+import { smartAssignChores } from "@/components/utils/smartAssignClient";
 import { format, startOfWeek } from "date-fns";
 import { useData } from "../components/contexts/DataContext";
 import { toast } from "sonner";

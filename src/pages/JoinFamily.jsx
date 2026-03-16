@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Loader2, Users, CheckCircle, AlertCircle } from 'lucide-react';
-import { joinFamilyByInviteCode } from '@/utils/familyLinkingClient';
+import { joinFamilyByInviteCode } from '@/components/utils/familyLinkingClient';
 import { createPageUrl } from '@/utils';
 
 // Constants
