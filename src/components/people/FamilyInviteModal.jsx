@@ -26,32 +26,50 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
     setIsGeneratingCode(true);
     try {
       const user = await base44.auth.me();
+      if (!user) {
+        toast.error('Authentication required to generate codes.');
+        return;
+      }
       if (!user?.family_id) {
         toast.error('No family found. Please refresh the page.');
+        return;
+      }
+      if (user.family_role !== 'parent' && user.role !== 'admin') {
+        toast.error('Only parents can generate invite codes.');
+        return;
+      }
+      if (user.subscription_tier === 'free') {
+        toast.error('Linking codes are a premium feature. Please upgrade your plan.');
         return;
       }
       const result = await generateLinkingCode(user.family_id);
       setGeneratedLinkingCode(result.linkingCode);
       setLinkingCodeExpiry(result.expiresAt);
       toast.success('Linking code generated successfully!');
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error('Error generating linking code:', error);
-      toast.error(error?.message || 'Failed to generate linking code. Please try again.');
+      toast.error('Failed to generate linking code. Please try again later.');
     } finally {
       setIsGeneratingCode(false);
     }
   };
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     if (generatedLinkingCode) {
-      navigator.clipboard.writeText(generatedLinkingCode);
-      toast.success('Linking code copied to clipboard!');
+      try {
+        await navigator.clipboard.writeText(generatedLinkingCode);
+        toast.success('Linking code copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy to clipboard:', err);
+        toast.error('Failed to copy code. Please copy manually.');
+      }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    toast.error('Email invitations require backend functions. Please use the Linking Code tab to share a code manually.');
+    toast.info('Email invitations are coming soon! For now, please use the Linking Code tab to share a code manually.');
   };
 
   const handleClose = () => {
@@ -59,7 +77,7 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
       setFormData({ email: '', name: '', role: 'child' });
       setGeneratedLinkingCode(null);
       setLinkingCodeExpiry(null);
-      setActiveTab('email');
+      setActiveTab('linking_code');
       onClose();
     }
   };
@@ -244,6 +262,24 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
                       className="funky-button flex-1 bg-gray-200 hover:bg-gray-300 text-[#5E3B85] border-3 border-[#5E3B85] py-3 header-font text-base"
                     >
                       Close
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleGenerateLinkingCode}
+                      disabled={isGeneratingCode}
+                      className="funky-button flex-1 bg-[#C3B1E1] hover:bg-[#b19dcb] text-white py-3 header-font text-base"
+                    >
+                      {isGeneratingCode ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <LinkIcon className="w-4 h-4 mr-2" />
+                          Generate New Code
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
