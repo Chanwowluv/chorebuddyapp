@@ -3,7 +3,7 @@
  * Used for permission checks, member limits, and subscription tier management
  */
 
-export { getMemberLimit, hasReachedMemberLimit, getRemainingSlots, formatTier } from '@/constants/subscriptionTiers';
+export { getMemberLimit, hasReachedMemberLimit, getRemainingSlots, formatTier } from '@/components/constants/subscriptionTiers';
 
 /**
  * Check if user can manage family (owner or co-owner)
