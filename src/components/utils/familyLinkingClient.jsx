@@ -55,3 +55,23 @@ export async function unlinkAccount(personId) {
   if (result.error) throw new Error(result.error);
   return result;
 }
+
+export async function linkAccountByCode(linkingCode) {
+  const response = await base44.functions.invoke('familyLinking', {
+    action: 'linkByCode',
+    linkingCode
+  });
+  const result = response.data || response;
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
+export async function linkAccountBySelection(personId) {
+  const response = await base44.functions.invoke('familyLinking', {
+    action: 'linkBySelection',
+    personId
+  });
+  const result = response.data || response;
+  if (result.error) throw new Error(result.error);
+  return result;
+}
