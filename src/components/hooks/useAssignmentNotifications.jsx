@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
-import { listForFamily } from '@/components/utils/entityHelpers';
 import { toast } from 'sonner';
 
 /**
