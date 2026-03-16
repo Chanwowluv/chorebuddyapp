@@ -33,7 +33,7 @@ export default function Home() {
               ) : (
                 <Button
                   className="funky-button bg-[#FF6B35] hover:bg-[#fa5a1f] text-white header-font text-2xl px-12 py-8"
-                  onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}
+                  onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}
                 >
                   Get Started for Free
                 </Button>
@@ -119,7 +119,7 @@ export default function Home() {
             ) : (
               <Button
                 className="funky-button bg-white hover:bg-gray-100 text-[#5E3B85] border-3 border-[#5E3B85] header-font text-2xl px-12 py-8"
-                onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}
+                onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}
               >
                 Get Started Now
               </Button>
