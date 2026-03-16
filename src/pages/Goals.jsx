@@ -12,7 +12,7 @@ import GoalFormModal from "../components/goals/GoalFormModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import FeatureGate from "../components/ui/FeatureGate";
-import { isParent as checkParent } from '@/utils/roles';
+import { isParent as checkParent } from '@/components/lib/roles';
 
 export default function Goals() {
   const { people, rewards, goals, user, loading, addGoal, updateGoal, deleteGoal, refresh } = useData();
