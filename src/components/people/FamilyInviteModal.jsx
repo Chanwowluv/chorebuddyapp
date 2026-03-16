@@ -17,7 +17,7 @@ export default function FamilyInviteModal({ isOpen, onClose, onSuccess }) {
     role: 'child'
   });
   const [isInviting, setIsInviting] = useState(false);
-  const [activeTab, setActiveTab] = useState('email');
+  const [activeTab, setActiveTab] = useState('linking_code');
   const [generatedLinkingCode, setGeneratedLinkingCode] = useState(null);
   const [linkingCodeExpiry, setLinkingCodeExpiry] = useState(null);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
