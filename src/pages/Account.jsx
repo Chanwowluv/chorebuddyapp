@@ -20,7 +20,7 @@ import ThemeSelector from '@/components/profile/ThemeSelector';
 import { useTheme } from '@/components/contexts/ThemeContext';
 import NotificationPreferences from '@/components/profile/NotificationPreferences';
 import AccessibilitySettings from '@/components/profile/AccessibilitySettings';
-import { isParent as checkParent, isChild } from '@/utils/roles';
+import { isParent as checkParent, isChild } from '@/components/lib/roles';
 import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
 
 // Error code to user-friendly message mapping for join errors

@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import { offlineStorage, STORES } from '../utils/offlineStorage';
 import { canManageFamily as canManageFamilyUtil, isFamilyOwner as isFamilyOwnerUtil } from '@/components/utils';
-import { isParent as isParentRole } from '@/utils/roles';
+import { isParent as isParentRole } from '@/components/lib/roles';
 import { toast } from "sonner";
 import { useAuth } from '@/lib/AuthContext';
 

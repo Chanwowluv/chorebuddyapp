@@ -11,7 +11,7 @@ import ConfirmDialog from "../components/ui/ConfirmDialog";
 import RedeemConfirmationModal from "../components/store/RedeemConfirmationModal"; // Import new modal
 import { format, startOfWeek } from "date-fns";
 import AISuggestionsModal from "../components/ai/AISuggestionsModal";
-import { isParent as checkParent } from '@/utils/roles';
+import { isParent as checkParent } from '@/components/lib/roles';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';
 
 export default function Store() {

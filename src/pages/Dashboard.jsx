@@ -18,7 +18,7 @@ import LevelProgressCard from "../components/dashboard/LevelProgressCard";
 import StreakDisplay from "../components/dashboard/StreakDisplay";
 import BadgeCollection from "../components/dashboard/BadgeCollection";
 import PointsEarnedNotification from "../components/gamification/PointsEarnedNotification";
-import { isParent as checkParent, isChild as checkChild } from "@/utils/roles";
+import { isParent as checkParent, isChild as checkChild } from "@/components/lib/roles";
 import ErrorBoundaryWithRetry from "../components/ui/ErrorBoundaryWithRetry";
 import PullToRefresh from "../components/ui/PullToRefresh";
 

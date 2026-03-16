@@ -17,7 +17,7 @@ import { ThemeProvider } from "./components/contexts/ThemeContext";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import OnboardingTour from "./components/onboarding/OnboardingTour";
 import UserAvatar from "./components/profile/UserAvatar";
-import { isParent as checkParent } from "@/utils/roles";
+import { isParent as checkParent } from "@/components/lib/roles";
 import { PUBLIC_PAGES } from "@/constants/publicPages";
 import MobileHeader from "./components/layout/MobileHeader";
 import "./globals.css";

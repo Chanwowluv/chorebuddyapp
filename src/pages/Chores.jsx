@@ -22,7 +22,7 @@ import { createPageUrl } from '@/utils';
 import EnhancedAssignmentModal from "../components/chores/EnhancedAssignmentModal";
 import BulkAssignmentModal from "../components/chores/BulkAssignmentModal";
 import AISuggestionsModal from "../components/ai/AISuggestionsModal";
-import { isParent as checkParent } from '@/utils/roles';
+import { isParent as checkParent } from '@/components/lib/roles';
 import { validateName, validateDescription, validateNumber } from '@/components/utils/validation';
 import { stripHTMLTags } from '@/components/lib/sanitization';
 import ErrorBoundaryWithRetry from '../components/ui/ErrorBoundaryWithRetry';

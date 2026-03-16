@@ -16,7 +16,7 @@ import LinkAccountModal from "../components/people/LinkAccountModal";
 import { useSubscriptionAccess } from '../components/hooks/useSubscriptionAccess';
 import LimitReachedModal from "../components/ui/LimitReachedModal";
 import ConfirmDialog from "../components/ui/ConfirmDialog";
-import { isParent as checkParent } from '@/utils/roles';
+import { isParent as checkParent } from '@/components/lib/roles';
 
 // Constants
 const TOAST_MESSAGES = {
