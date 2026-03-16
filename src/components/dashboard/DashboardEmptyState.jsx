@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Users, Sparkles, AlertCircle } from "lucide-react";
-import { isParent as checkParent } from '@/utils/roles';
+import { isParent as checkParent } from '@/components/lib/roles';
 
 export default function DashboardEmptyState({ currentWeekAssignments, people, chores, user }) {
   if (currentWeekAssignments?.length > 0) return null;
