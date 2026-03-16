@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useData } from '@/components/contexts/DataContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,8 @@ import {
   Bell,
   Zap,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,6 +25,9 @@ export default function FamilySettings() {
   const { user, family, loading, updateFamily, canManageFamily, isFamilyOwner } = useData();
   const [saving, setSaving] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [nameStatus, setNameStatus] = useState('idle'); // 'idle' | 'saving' | 'saved' | 'error'
+  const nameTimerRef = useRef(null);
+  const initialLoadRef = useRef(true);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -40,15 +44,62 @@ export default function FamilySettings() {
     }
   }, [family]);
 
+  // Debounced auto-save for family name
+  useEffect(() => {
+    // Skip auto-save on initial load when formData syncs from family
+    if (initialLoadRef.current) {
+      initialLoadRef.current = false;
+      return;
+    }
+
+    // Skip if name hasn't actually changed from what's stored
+    if (!family || formData.name === family.name) {
+      return;
+    }
+
+    // Skip if name is empty or whitespace only
+    if (!formData.name.trim()) {
+      return;
+    }
+
+    // Clear any existing timer
+    if (nameTimerRef.current) {
+      clearTimeout(nameTimerRef.current);
+    }
+
+    setNameStatus('saving');
+
+    // Debounce: save 800ms after last keystroke
+    nameTimerRef.current = setTimeout(async () => {
+      try {
+        await updateFamily({ name: formData.name.trim() });
+        setNameStatus('saved');
+        // Reset status after 2 seconds
+        setTimeout(() => setNameStatus('idle'), 2000);
+      } catch (error) {
+        console.error('Error auto-saving family name:', error);
+        setNameStatus('error');
+      }
+    }, 800);
+
+    // Cleanup timer on unmount or re-trigger
+    return () => {
+      if (nameTimerRef.current) {
+        clearTimeout(nameTimerRef.current);
+      }
+    };
+  }, [formData.name, family, updateFamily]);
+
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
       await updateFamily({
-        name: formData.name,
+        // name is NOT included here — it auto-saves separately
         settings: formData.settings,
       });
+      toast.success('Settings saved!');
     } catch (error) {
-      console.error('Error updating family:', error);
+      console.error('Error updating settings:', error);
       toast.error('Failed to update settings');
     } finally {
       setSaving(false);
@@ -161,9 +212,24 @@ export default function FamilySettings() {
         <TabsContent value="general" className="space-y-6 mt-6">
           {/* Family Name */}
           <div className="funky-card p-6">
-            <h3 className="header-font text-xl text-[#2B59C3] mb-4">
-              Family Name
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="header-font text-xl text-[#2B59C3]">Family Name</h3>
+              {nameStatus === 'saving' && (
+                <span className="body-font-light text-sm text-gray-400 flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+                </span>
+              )}
+              {nameStatus === 'saved' && (
+                <span className="body-font-light text-sm text-green-600 flex items-center gap-1">
+                  <Check className="w-3 h-3" /> Saved
+                </span>
+              )}
+              {nameStatus === 'error' && (
+                <span className="body-font-light text-sm text-red-500 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Save failed
+                </span>
+              )}
+            </div>
             <div className="space-y-2">
               <Input
                 value={formData.name}
@@ -172,7 +238,7 @@ export default function FamilySettings() {
                 maxLength={100}
               />
               <p className="body-font-light text-sm text-gray-500">
-                This name helps identify your family
+                Changes save automatically
               </p>
             </div>
           </div>
