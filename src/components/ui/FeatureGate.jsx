@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
+import { createPageUrl } from '@/components/lib/navigation';
 import { useSubscriptionAccess } from '../hooks/useSubscriptionAccess';
 
 export default function FeatureGate({ 

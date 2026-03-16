@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useData } from '../components/contexts/DataContext';
-import { FamilyGoal } from "@/entities/FamilyGoal";
+import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Plus, Target, Trophy } from "lucide-react";
 import { parseISO, isAfter } from "date-fns";
@@ -42,11 +42,11 @@ export default function Goals() {
       );
 
       for (const goal of updates) {
-        await FamilyGoal.update(goal.id, { current_points: familyPoints });
+        await base44.entities.FamilyGoal.update(goal.id, { current_points: familyPoints });
 
         // Check if goal is completed
         if (familyPoints >= goal.target_points) {
-          await FamilyGoal.update(goal.id, {
+          await base44.entities.FamilyGoal.update(goal.id, {
             status: 'completed',
             completed_date: new Date().toISOString()
           });
@@ -61,7 +61,7 @@ export default function Goals() {
       );
 
       for (const goal of expiredGoals) {
-        await FamilyGoal.update(goal.id, { status: 'expired' });
+        await base44.entities.FamilyGoal.update(goal.id, { status: 'expired' });
       }
 
       // Refresh DataContext to pick up changes
