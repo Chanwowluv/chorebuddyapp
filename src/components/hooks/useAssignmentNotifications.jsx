@@ -21,8 +21,8 @@ export function useAssignmentNotifications(familyId, enabled = true) {
 
     try {
       const [people, chores] = await Promise.all([
-        listForFamily(Person, familyId),
-        listForFamily(Chore, familyId)
+        base44.entities.Person.filter({ family_id: familyId }),
+        base44.entities.Chore.filter({ family_id: familyId })
       ]);
 
       // Build lookup maps
@@ -45,7 +45,7 @@ export function useAssignmentNotifications(familyId, enabled = true) {
     if (!familyId || !enabled || !isActiveRef.current) return;
 
     try {
-      const assignments = await listForFamily(Assignment, familyId, '-created_date');
+      const assignments = await base44.entities.Assignment.filter({ family_id: familyId });
 
       // Skip notification on first load (just initialize the cache)
       if (!initializedRef.current) {
