@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Family } from '@/entities/Family';
 import { createPageUrl } from '@/utils';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -19,9 +18,9 @@ import {
     CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { generateLinkingCode as generateLinkingCodeClient, joinFamilyByCode } from '@/utils/familyLinkingClient';
-import { isParent as checkParent } from '@/utils/roles';
-import { getMemberLimit, formatTier } from '@/constants/subscriptionTiers';
+import { generateLinkingCode as generateLinkingCodeClient, joinFamilyByCode } from '@/components/utils/familyLinkingClient';
+import { isParent as checkParent } from '@/components/lib/roles';
+import { getMemberLimit, formatTier } from '@/components/constants/subscriptionTiers';
 
 // Error code to user-friendly message mapping for join errors
 const LINKING_ERROR_MESSAGES = {
