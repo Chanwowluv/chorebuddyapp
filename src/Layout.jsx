@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import {
-  Home, Users, ClipboardList, Calendar, Sparkles, Zap,
+  Home, Users, ClipboardList, Calendar, CalendarClock, Sparkles, Zap,
   Settings, Loader2, Target, CheckCircle, MessageCircle,
   Megaphone, MoreHorizontal,
 } from "lucide-react";
@@ -59,7 +59,7 @@ const navigationItems = [
   {
     title: "Schedule",
     url: createPageUrl("Schedule"),
-    icon: Calendar,
+    icon: CalendarClock,
     color: "bg-[#9F87D6] text-white",
     hover: "hover:bg-[#8A6FD6]",
     active: "bg-[#8A6FD6]",
