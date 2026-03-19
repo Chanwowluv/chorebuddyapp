@@ -663,7 +663,7 @@ function AppLayout({
         {/* ── Main Content ─────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
           <MobileHeader currentPageName={currentPageName} />
-          <div className="pt-mobile-header lg:pt-0 overflow-x-hidden">
+          <div className="pt-mobile-header lg:pt-0 overflow-x-hidden relative min-h-[50vh]">
             <AnimatePresence mode="popLayout" custom={directionRef.current}>
               <motion.div
                 key={location.pathname}
