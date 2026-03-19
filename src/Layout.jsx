@@ -152,6 +152,21 @@ const utilityNavItems = [
   },
 ];
 
+// ── Sanitise auth response to only keep what we render ───────────────────
+function sanitizeUser(userData) {
+  if (!userData) return null;
+  return {
+    full_name: userData.full_name ?? "",
+    family_role: userData.family_role ?? null,
+    subscription_tier: userData.subscription_tier ?? "free",
+    data: {
+      avatar: userData.data?.avatar ?? null,
+      onboarding_completed: userData.data?.onboarding_completed ?? false,
+    },
+    id: userData.id,
+  };
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const isItemActive = (itemUrl, currentPath) => {
@@ -453,8 +468,8 @@ function AppLayout({
       const checkAuthSilently = async () => {
         try {
           const userData = await base44.auth.me();
-          setIsAuthenticated(true); // Fix: was missing `true`
-          setCurrentUser(userData);
+          setIsAuthenticated(true);
+          setCurrentUser(sanitizeUser(userData));
         } catch {
           setIsAuthenticated(false);
           setCurrentUser(null);
@@ -469,8 +484,8 @@ function AppLayout({
     const checkAuth = async () => {
       try {
         const userData = await base44.auth.me();
-        setIsAuthenticated(true); // Fix: was called without argument
-        setCurrentUser(userData);
+        setIsAuthenticated(true);
+        setCurrentUser(sanitizeUser(userData));
 
         // Redirect to role selection if no role set
         if (!userData.family_role && currentPageName !== "RoleSelection") {
