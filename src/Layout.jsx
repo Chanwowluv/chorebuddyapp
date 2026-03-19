@@ -139,6 +139,7 @@ const utilityNavItems = [
     color: "bg-gray-200 text-gray-700",
     hover: "hover:bg-gray-300",
     active: "bg-gray-300",
+    visibleTo: ["parent", "teen"],
   },
   {
     title: "Upgrade",
@@ -147,6 +148,7 @@ const utilityNavItems = [
     color: "bg-green-400 text-green-800",
     hover: "hover:bg-green-500",
     active: "bg-green-500",
+    visibleTo: ["parent"],
   },
 ];
 
@@ -630,7 +632,9 @@ function AppLayout({
 
               {/* Utility links */}
               <div className="pt-4 border-t-2 border-dashed border-gray-300 space-y-4">
-                {utilityNavItems.map((item) => (
+                {utilityNavItems
+                .filter((item) => !item.visibleTo || item.visibleTo.includes(normalizeNavRole(currentUser?.family_role)))
+                .map((item) => (
                   <SidebarNavItem
                     key={item.title}
                     item={item}
@@ -694,7 +698,9 @@ function AppLayout({
           ))}
 
           {/* Utility items inline */}
-          {utilityNavItems.map((item) => (
+          {utilityNavItems
+            .filter((item) => !item.visibleTo || item.visibleTo.includes(normalizeNavRole(currentUser?.family_role)))
+            .map((item) => (
             <MobileNavItem
               key={item.title}
               item={item}
