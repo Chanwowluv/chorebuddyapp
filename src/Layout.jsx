@@ -546,9 +546,26 @@ function AppLayout({
     );
   }
 
-  // ── Role guard — block rendering until role is set ────────────────────
-  if (!currentUser?.family_role && currentPageName !== "RoleSelection") {
-    // useEffect will redirect, but this prevents content flash
+  // ── Role guard ────────────────────────────────────────────────────────
+  if (currentUser?.family_role) {
+    // Check if current page requires a specific role
+    const currentNavItem = navigationItems.find(
+      (item) => item.url === location.pathname
+    );
+    if (
+      currentNavItem?.visibleTo &&
+      !currentNavItem.visibleTo.includes(currentUser.family_role)
+    ) {
+      // User doesn't have permission — bounce to Dashboard
+      navigate(createPageUrl("Dashboard"), { replace: true });
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
+          <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
+        </div>
+      );
+    }
+  } else if (currentPageName !== "RoleSelection") {
+    // No role at all — redirect to role selection
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
         <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
