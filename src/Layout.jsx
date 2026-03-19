@@ -219,7 +219,7 @@ function MobileNavItem({ item, isActive, onClick }) {
 // ─── Mobile "More" overflow menu ─────────────────────────────────────────────
 
 function MobileMoreMenu({ items, location, navigate }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   if (items.length === 0) return null;
 
