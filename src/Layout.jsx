@@ -526,8 +526,22 @@ function AppLayout({
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
-        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF5] gap-6 p-8">
+        <div className="funky-button w-20 h-20 bg-[#C3B1E1] flex items-center justify-center">
+          <Sparkles className="w-10 h-10 text-white" />
+        </div>
+        <h2 className="header-font text-2xl text-[#5E3B85] text-center">
+          Session Expired
+        </h2>
+        <p className="body-font text-gray-600 text-center max-w-md">
+          Your session has ended. Please sign in again to continue.
+        </p>
+        <button
+          onClick={() => base44.auth.redirectToLogin()}
+          className="funky-button px-8 py-3 bg-[#2B59C3] text-white text-lg header-font hover:bg-[#24479c] transition-colors"
+        >
+          Sign In
+        </button>
       </div>
     );
   }
