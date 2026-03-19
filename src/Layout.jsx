@@ -546,6 +546,16 @@ function AppLayout({
     );
   }
 
+  // ── Role guard — block rendering until role is set ────────────────────
+  if (!currentUser?.family_role && currentPageName !== "RoleSelection") {
+    // useEffect will redirect, but this prevents content flash
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
+        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
+      </div>
+    );
+  }
+
   // ── Authenticated layout ──────────────────────────────────────────────────
 
   return (
