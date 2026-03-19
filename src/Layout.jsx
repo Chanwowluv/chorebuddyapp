@@ -151,6 +151,16 @@ const utilityNavItems = [
   },
 ];
 
+// ── Auth with timeout — prevents infinite hang when no session exists ─────
+function authWithTimeout(ms = 5000) {
+  return Promise.race([
+    base44.auth.me(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Auth timeout")), ms)
+    ),
+  ]);
+}
+
 // ── Sanitise auth response to only keep what we render ───────────────────
 function sanitizeUser(userData) {
   if (!userData) return null;
@@ -413,21 +423,19 @@ function useFilteredNavItems(currentUser) {
 }
 
 // ─── Main AppLayout ──────────────────────────────────────────────────────────
+// Auth is handled by LayoutWrapper. This component always receives a valid
+// currentUser and only renders for authenticated users.
 
 function AppLayout({
   children,
   currentPageName,
+  currentUser,
   showOnboarding,
   setShowOnboarding,
 }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
-  const isPublicPage = PUBLIC_PAGES.includes(currentPageName);
-  
   // Transition direction logic
   const prevPathRef = useRef(location.pathname);
   const directionRef = useRef(0);
@@ -458,61 +466,6 @@ function AppLayout({
     }
   }, [location.pathname, rootPaths]);
 
-  // ── Auth check ────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    if (isPublicPage) {
-      // Don't block public pages with auth — but still check silently
-      // so authenticated users on public pages get the full layout
-      const checkAuthSilently = async () => {
-        try {
-          const userData = await base44.auth.me();
-          setIsAuthenticated(true);
-          setCurrentUser(sanitizeUser(userData));
-        } catch {
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-        } finally {
-          setAuthChecked(true);
-        }
-      };
-      checkAuthSilently();
-      return;
-    }
-
-    const checkAuth = async () => {
-      try {
-        const userData = await base44.auth.me();
-        setIsAuthenticated(true);
-        setCurrentUser(sanitizeUser(userData));
-
-        // Redirect to role selection if no role set
-        if (!userData.family_role && currentPageName !== "RoleSelection") {
-          navigate(createPageUrl("RoleSelection"));
-          return;
-        }
-
-        // Show onboarding once per browser session (survives error boundary remounts)
-        if (
-          userData.family_role &&
-          !userData.data?.onboarding_completed &&
-          currentPageName !== "RoleSelection" &&
-          !sessionStorage.getItem("chorebuddy_onboarding_shown")
-        ) {
-          setShowOnboarding(true);
-          sessionStorage.setItem("chorebuddy_onboarding_shown", "true");
-        }
-      } catch {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-      } finally {
-        setAuthChecked(true);
-      }
-    };
-
-    checkAuth();
-  }, [currentPageName, navigate, isPublicPage, setShowOnboarding]);
-
   // ── Navigation filtering ──────────────────────────────────────────────────
 
   const { sidebarItems, primaryMobile, overflowMobile } =
@@ -532,44 +485,6 @@ function AppLayout({
     },
     [location.pathname, navigate]
   );
-
-  // ── Public pages: render immediately (no auth spinner) ────────────────────
-
-  if (isPublicPage && !isAuthenticated) {
-    return <PublicLayout>{children}</PublicLayout>;
-  }
-
-  // ── Waiting for auth ──────────────────────────────────────────────────────
-
-  if (!authChecked) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
-        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#FDFBF5] gap-6 p-8">
-        <div className="funky-button w-20 h-20 bg-[#C3B1E1] flex items-center justify-center">
-          <Sparkles className="w-10 h-10 text-white" />
-        </div>
-        <h2 className="header-font text-2xl text-[#5E3B85] text-center">
-          Session Expired
-        </h2>
-        <p className="body-font text-gray-600 text-center max-w-md">
-          Your session has ended. Please sign in again to continue.
-        </p>
-        <button
-          onClick={() => base44.auth.redirectToLogin()}
-          className="funky-button px-8 py-3 bg-[#2B59C3] text-white text-lg header-font hover:bg-[#24479c] transition-colors"
-        >
-          Sign In
-        </button>
-      </div>
-    );
-  }
 
   // ── Role guard ────────────────────────────────────────────────────────
   if (currentUser?.family_role) {
@@ -591,6 +506,7 @@ function AppLayout({
     }
   } else if (currentPageName !== "RoleSelection") {
     // No role at all — redirect to role selection
+    navigate(createPageUrl("RoleSelection"), { replace: true });
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
         <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
@@ -742,17 +658,114 @@ function AppLayout({
   );
 }
 
-// ─── Root wrapper ────────────────────────────────────────────────────────────
+// ─── Root wrapper — owns auth state, gates DataProvider behind auth ──────────
 
 export default function LayoutWrapper(props) {
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
+  const isPublicPage = PUBLIC_PAGES.includes(props.currentPageName);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const userData = await authWithTimeout(5000);
+        setIsAuthenticated(true);
+        setCurrentUser(sanitizeUser(userData));
+
+        // Show onboarding once per browser session
+        if (
+          userData.family_role &&
+          !userData.data?.onboarding_completed &&
+          props.currentPageName !== "RoleSelection" &&
+          !sessionStorage.getItem("chorebuddy_onboarding_shown")
+        ) {
+          setShowOnboarding(true);
+          sessionStorage.setItem("chorebuddy_onboarding_shown", "true");
+        }
+      } catch {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+      } finally {
+        setAuthChecked(true);
+      }
+    };
+
+    checkAuth();
+  }, [props.currentPageName]);
+
+  // ── Public page → always render immediately, never block on auth ──────────
+  // Authenticated users on public pages still see PublicLayout (not the app
+  // shell). Auth runs silently in background so we know who they are, but the
+  // page is never gated behind it.
+  if (isPublicPage && !isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider>
+          <PublicLayout>{props.children}</PublicLayout>
+          <CookieBanner />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // ── Private page, auth still checking ───────────────────────────────────
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
+        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
+      </div>
+    );
+  }
+
+  // ── Auth failed on private page → send to home, offer sign-in ────────────
+  if (!isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider>
+          <PublicLayout>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
+              <div className="funky-button w-20 h-20 bg-[#C3B1E1] flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="header-font text-2xl text-[#5E3B85] text-center">
+                You need to be signed in
+              </h2>
+              <p className="body-font text-gray-600 text-center max-w-md">
+                Sign in to access your family dashboard, chores, and more.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to={createPageUrl("Home")}
+                  className="funky-button px-8 py-3 bg-gray-200 text-[#5E3B85] text-lg header-font hover:bg-gray-300 transition-colors text-center"
+                >
+                  Explore Home
+                </Link>
+                <button
+                  onClick={() => base44.auth.signIn()}
+                  className="funky-button px-8 py-3 bg-[#2B59C3] text-white text-lg header-font hover:bg-[#24479c] transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </PublicLayout>
+          <CookieBanner />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // ── Authenticated → mount DataProvider safely, then AppLayout ───────────
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <DataProvider>
           <AppLayout
             {...props}
+            currentUser={currentUser}
             showOnboarding={showOnboarding}
             setShowOnboarding={setShowOnboarding}
           />
