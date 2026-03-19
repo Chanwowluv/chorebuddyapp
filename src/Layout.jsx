@@ -362,9 +362,18 @@ function AppFooter() {
 
 // ─── Hook: filters nav items by user role ────────────────────────────────────
 
+// ── Role normalisation helper ────────────────────────────────────────────
+const PARENT_ROLES = new Set(["parent", "owner", "co-owner", "admin"]);
+
+function normalizeNavRole(familyRole) {
+  if (!familyRole) return "child"; // safest default
+  if (PARENT_ROLES.has(familyRole)) return "parent";
+  if (familyRole === "teen") return "teen";
+  return "child"; // unknown roles get most restrictive access
+}
+
 function useFilteredNavItems(currentUser) {
-  const isParent = checkParent(currentUser);
-  const userRole = currentUser?.family_role || "child";
+  const userRole = normalizeNavRole(currentUser?.family_role);
 
   return useMemo(() => {
     const roleFiltered = navigationItems.filter((item) =>
