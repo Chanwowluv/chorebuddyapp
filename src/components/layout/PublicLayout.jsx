@@ -95,12 +95,12 @@ export default function PublicLayout({ children }) {
               </Link>
             ) : (
               <>
-                <Button variant="ghost" className="body-font text-[#5E3B85] hidden sm:block" onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}>
+                <Button variant="ghost" className="body-font text-[#5E3B85] hidden sm:block" onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}>
                   Log In
                 </Button>
                 <Button
                   className="funky-button bg-[#FF6B35] hover:bg-[#fa5a1f] text-white header-font text-lg px-6 py-2"
-                  onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}
+                  onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}
                 >
                   Sign Up
                 </Button>
