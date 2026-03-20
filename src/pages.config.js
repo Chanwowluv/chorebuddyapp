@@ -83,8 +83,6 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "Account": Account,
     "Achievements": Achievements,
-    "Admin": Admin,
-    "Analytics": Analytics,
     "ApprovalQueue": ApprovalQueue,
     "Challenges": Challenges,
     "ChoreHistory": ChoreHistory,
