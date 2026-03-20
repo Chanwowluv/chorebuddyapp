@@ -693,8 +693,8 @@ export default function LayoutWrapper(props) {
     checkAuth();
   }, [props.currentPageName]);
 
-  // ── Public page → always render immediately, never block on auth ──────────
-  if (isPublicPage && !isAuthenticated) {
+  // ── Public page → always render in PublicLayout, regardless of auth ──────
+  if (isPublicPage) {
     return (
       <ErrorBoundary>
         <ThemeProvider>
