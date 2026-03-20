@@ -148,6 +148,16 @@ const utilityNavItems = [
   },
 ];
 
+// ── Auth with timeout — prevents infinite hang when no session exists ─────
+function authWithTimeout(ms = 5000) {
+  return Promise.race([
+    base44.auth.me(),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Auth timeout")), ms)
+    ),
+  ]);
+}
+
 // ── Sanitise auth response to only keep what we render ───────────────────
 function sanitizeUser(userData) {
   if (!userData) return null;
