@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '@/entities/User';
-import { Family } from '@/entities/Family';
-import { Person } from '@/entities/Person';
+import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { Users, Baby, Sparkles, Loader2 } from 'lucide-react';
