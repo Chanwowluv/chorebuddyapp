@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { User } from '@/entities/User';
+import { Family } from '@/entities/Family';
+import { Person } from '@/entities/Person';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import { Users, Baby, Sparkles, Loader2 } from 'lucide-react';
@@ -15,7 +17,7 @@ export default function RoleSelection() {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const userData = await base44.auth.me();
+        const userData = await User.me();
         
         // If user already has a family_role set, redirect to dashboard
         if (userData.family_role) {
@@ -38,11 +40,11 @@ export default function RoleSelection() {
     setSelecting(true);
 
     try {
-      const userData = await base44.auth.me();
+      const userData = await User.me();
       
       // If parent, create a family, Person record, and set admin role
       if (role === 'parent') {
-        const family = await base44.entities.Family.create({
+        const family = await Family.create({
           name: `${userData.full_name}'s Family`,
           owner_user_id: userData.id,
           members: [userData.id],
@@ -58,7 +60,7 @@ export default function RoleSelection() {
 
         // Auto-create a Person record for the parent so they are
         // immediately visible as a family member (no manual linking needed)
-        await base44.entities.Person.create({
+        await Person.create({
           name: userData.full_name || 'Parent',
           family_id: family.id,
           linked_user_id: userData.id,
@@ -74,7 +76,7 @@ export default function RoleSelection() {
         });
 
         // Admin privileges are derived from family_role: 'parent'
-        await base44.auth.updateMe({
+        await User.updateMyUserData({
           family_id: family.id,
           family_role: role,
           subscription_tier: 'free',
@@ -90,7 +92,7 @@ export default function RoleSelection() {
         }
       } else {
         // Teen/Child - just set role, they'll join family via linking code
-        await base44.auth.updateMe({
+        await User.updateMyUserData({
           family_role: role,
           subscription_tier: 'free',
           subscription_status: 'active'

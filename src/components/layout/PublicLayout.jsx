@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { User } from '@/entities/User';
 import { setCookie, getCookie } from '../utils/cookies';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -95,12 +95,12 @@ export default function PublicLayout({ children }) {
               </Link>
             ) : (
               <>
-                <Button variant="ghost" className="body-font text-[#5E3B85] hidden sm:block" onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}>
+                <Button variant="ghost" className="body-font text-[#5E3B85] hidden sm:block" onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}>
                   Log In
                 </Button>
                 <Button
                   className="funky-button bg-[#FF6B35] hover:bg-[#fa5a1f] text-white header-font text-lg px-6 py-2"
-                  onClick={() => base44.auth.redirectToLogin(createPageUrl("Dashboard"))}
+                  onClick={() => User.loginWithRedirect(createPageUrl("Dashboard"))}
                 >
                   Sign Up
                 </Button>

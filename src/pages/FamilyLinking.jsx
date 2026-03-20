@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { Family } from '@/entities/Family';
 import { createPageUrl } from '@/utils';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -78,7 +79,7 @@ export default function FamilyLinking() {
 
                 // For parents/admins, fetch their family data
                 if (checkParent(userData) && userData.family_id) {
-                    const familyData = await base44.entities.Family.get(userData.family_id);
+                    const familyData = await Family.get(userData.family_id);
                     if (familyData) {
                         setFamily(familyData);
                         if (familyData.linking_code) {

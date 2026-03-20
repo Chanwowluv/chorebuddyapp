@@ -68,9 +68,9 @@ export default function Pricing() {
   const blockedFeature = location.state?.feature;
   const customMessage = location.state?.message;
   
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(true);
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function Pricing() {
       } catch (error) {
         console.error("No authenticated user found", error);
       } finally {
-        setLoading(false);
+        setLoading(true);
       }
     };
     fetchUser();
