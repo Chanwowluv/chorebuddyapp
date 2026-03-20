@@ -744,7 +744,7 @@ export default function LayoutWrapper(props) {
                   Explore Home
                 </Link>
                 <button
-                  onClick={() => base44.auth.signIn()}
+                  onClick={() => base44.auth.redirectToLogin()}
                   className="funky-button px-8 py-3 bg-[#2B59C3] text-white text-lg header-font hover:bg-[#24479c] transition-colors"
                 >
                   Sign In
