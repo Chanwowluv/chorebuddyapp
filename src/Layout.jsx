@@ -693,6 +693,64 @@ export default function LayoutWrapper(props) {
     checkAuth();
   }, [props.currentPageName]);
 
+  // ── Public page → always render immediately, never block on auth ──────────
+  if (isPublicPage && !isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider>
+          <PublicLayout>{props.children}</PublicLayout>
+          <CookieBanner />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  // ── Private page, auth still checking ───────────────────────────────────
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
+        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
+      </div>
+    );
+  }
+
+  // ── Auth failed on private page → send to home, offer sign-in ────────────
+  if (!isAuthenticated) {
+    return (
+      <ErrorBoundary>
+        <ThemeProvider>
+          <PublicLayout>
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
+              <div className="funky-button w-20 h-20 bg-[#C3B1E1] flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="header-font text-2xl text-[#5E3B85] text-center">
+                You need to be signed in
+              </h2>
+              <p className="body-font text-gray-600 text-center max-w-md">
+                Sign in to access your family dashboard, chores, and more.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  to={createPageUrl("Home")}
+                  className="funky-button px-8 py-3 bg-gray-200 text-[#5E3B85] text-lg header-font hover:bg-gray-300 transition-colors text-center"
+                >
+                  Explore Home
+                </Link>
+                <button
+                  onClick={() => base44.auth.redirectToLogin()}
+                  className="funky-button px-8 py-3 bg-[#2B59C3] text-white text-lg header-font hover:bg-[#24479c] transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+          </PublicLayout>
+          <CookieBanner />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+  }
 
   // ── Authenticated → mount DataProvider safely, then AppLayout ───────────
   return (
