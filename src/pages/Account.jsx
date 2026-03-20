@@ -119,7 +119,7 @@ export default function Account() {
           }
 
           // Fetch family people (scoped to user's family)
-          const familyPeople = await listForFamily(Person, userData.family_id);
+          const familyPeople = await listForFamily(base44.entities.Person, userData.family_id);
           setPeople(familyPeople);
 
           // Find linked person
@@ -222,7 +222,7 @@ export default function Account() {
     // This callback only needs to refresh local state to reflect the change.
     setIsLinking(true);
     try {
-      const familyPeople = await listForFamily(Person, user.family_id);
+      const familyPeople = await listForFamily(base44.entities.Person, user.family_id);
       setPeople(familyPeople);
       const linked = familyPeople.find((p) => p.id === personId);
       setLinkedPerson(linked || null);
