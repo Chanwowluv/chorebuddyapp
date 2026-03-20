@@ -683,29 +683,6 @@ export default function LayoutWrapper(props) {
     checkAuth();
   }, [props.currentPageName]);
 
-  // ── Public page → always render immediately, never block on auth ──────────
-  // Authenticated users on public pages still see PublicLayout (not the app
-  // shell). Auth runs silently in background so we know who they are, but the
-  // page is never gated behind it.
-  if (isPublicPage && !isAuthenticated) {
-    return (
-      <ErrorBoundary>
-        <ThemeProvider>
-          <PublicLayout>{props.children}</PublicLayout>
-          <CookieBanner />
-        </ThemeProvider>
-      </ErrorBoundary>
-    );
-  }
-
-  // ── Private page, auth still checking ───────────────────────────────────
-  if (!authChecked) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FDFBF5]">
-        <Loader2 className="w-16 h-16 animate-spin text-[#C3B1E1]" />
-      </div>
-    );
-  }
 
   // ── Authenticated → mount DataProvider safely, then AppLayout ───────────
   return (
