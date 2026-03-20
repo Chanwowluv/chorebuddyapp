@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { User } from '@/entities/User';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Zap, Users, Gift } from 'lucide-react';
 import FeatureCard from '../components/landing/FeatureCard';
