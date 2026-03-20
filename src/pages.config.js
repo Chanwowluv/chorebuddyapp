@@ -41,16 +41,11 @@
  *       Layout: __Layout,
  *   };
  *
- * To change the main page from HomePage to Dashboard, use find_replace:
- *   Old: mainPage: "HomePage",
- *   New: mainPage: "Dashboard",
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Account from './pages/Account';
 import Achievements from './pages/Achievements';
-import Admin from './pages/Admin';
-import Analytics from './pages/Analytics';
 import ApprovalQueue from './pages/ApprovalQueue';
 import Challenges from './pages/Challenges';
 import ChoreHistory from './pages/ChoreHistory';
@@ -62,6 +57,7 @@ import FamilyLinking from './pages/FamilyLinking';
 import Goals from './pages/Goals';
 import Help from './pages/Help';
 import Home from './pages/Home';
+import Settings from './pages/Settings';
 import Index from './pages/Index';
 import JoinFamily from './pages/JoinFamily';
 import LeaderboardHistory from './pages/LeaderboardHistory';
@@ -76,7 +72,6 @@ import Privacy from './pages/Privacy';
 import RoleSelection from './pages/RoleSelection';
 import Schedule from './pages/Schedule';
 import Store from './pages/Store';
-import Templates from './pages/Templates';
 import __Layout from './Layout.jsx';
 
 
@@ -108,11 +103,12 @@ export const PAGES = {
     "RoleSelection": RoleSelection,
     "Schedule": Schedule,
     "Store": Store,
-    "Templates": Templates,
+    "HomePage": HomePage,
+    "Dashboard": Dashboard,
+    "Settings": Settings,
 }
 
-export const pagesConfig = {
-    mainPage: "Home",
-    Pages: PAGES,
-    Layout: __Layout,
-};
+   export const pagesConfig = {
+       mainPage: "HomePage",
+       Pages: PAGES,
+   };
