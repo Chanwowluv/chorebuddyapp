@@ -1,141 +1,28 @@
-// functions/familyLinking.ts
+// functions/familyLinking.js
 // Handles linking code generation, family joining (linking_code flow),
 // account unlinking, and member listing.
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
-// ─── Shared Utils Inlined ─────────────────────────────────────────────────────
-export interface Base44Client {
-  auth: {
-    getUser(): Promise<AppUser | null>;
-    updateMe(data: Partial<AppUser>): Promise<void>;
-  };
-  asServiceRole: {
-    entities: {
-      User: EntityAPI<AppUser>;
-      Family: EntityAPI<Family>;
-      Person: EntityAPI<Person>;
-    };
-    integrations: {
-      Core: {
-        SendEmail(opts: EmailOptions): Promise<void>;
-      };
-    };
-  };
-}
-
-export interface EntityAPI<T> {
-  get(id: string): Promise<T>;
-  filter(query: Partial<T>): Promise<T[]>;
-  create(data: Partial<T>): Promise<T>;
-  update(id: string, data: Partial<T>): Promise<T>;
-  delete(id: string): Promise<void>;
-}
-
-export interface AppUser {
-  id: string;
-  email: string;
-  full_name?: string;
-  family_id?: string | null;
-  family_role?: string;
-  linked_person_id?: string | null;
-}
-
-export interface Family {
-  id: string;
-  name: string;
-  owner_user_id?: string;
-  members?: string[];
-  member_count?: number;
-  invite_code?: string;
-  linking_code?: string;
-  linking_code_expires?: string;
-  tier?: string;
-  max_members?: number;
-}
-
-export interface Person {
-  id: string;
-  name: string;
-  family_id: string;
-  linked_user_id?: string | null;
-  role: string;
-  points_balance?: number;
-  total_points_earned?: number;
-  chores_completed_count?: number;
-  current_streak?: number;
-  best_streak?: number;
-  is_active?: boolean;
-  avatar_color?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface EmailOptions {
-  to: string;
-  subject: string;
-  body: string;
-  from_name?: string;
-}
-
-export interface RateLimitResult {
-  allowed: boolean;
-  remaining?: number;
-}
-
-export interface CodeValidation {
-  valid: boolean;
-  code: string;
-  error?: string;
-}
-
-export interface JoinCheckResult {
-  allowed: boolean;
-  reason?: string;
-  message?: string;
-}
-
-export interface FamilyLookup {
-  family: Family | null;
-  error?: string;
-}
-
-export interface AuthResult {
-  user: AppUser | null;
-  error?: Response;
-}
-
-export interface ParseResult {
-  data: Record<string, unknown>;
-  error?: Response;
-}
-
-export interface RollbackState {
-  personId?: string | null;
-  userId: string;
-  familyId: string;
-  originalFamilyId?: string | null;
-  originalMembers: string[];
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const APP = {
   NAME: 'ChoreBuddy',
   URL: 'https://chorebuddy.app',
-} as const;
+};
 
 const HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-} as const;
+};
 
 const CODE_EXPIRY_HOURS = 48;
 
-const VALID_ROLES = ['parent', 'teen', 'child'] as const;
-type ValidRole = typeof VALID_ROLES[number];
+const VALID_ROLES = ['parent', 'teen', 'child'];
 
-const TIER_LIMITS: Record<string, number> = {
+const TIER_LIMITS = {
   free: 4,
   premium: 10,
   family: 20,
@@ -163,29 +50,25 @@ const ERROR_CODES = {
   LINK_FAILED:         { code: 'LINK_FAILED',          status: 500 },
   RATE_LIMITED:        { code: 'RATE_LIMITED',         status: 429 },
   SERVER_ERROR:        { code: 'SERVER_ERROR',         status: 500 },
-} as const;
+};
 
-type ErrorCodeKey = keyof typeof ERROR_CODES;
+// ─── Response Helpers ─────────────────────────────────────────────────────────
 
-function successResponse(data: Record<string, unknown>): Response {
+function successResponse(data) {
   return new Response(JSON.stringify({ success: true, ...data }), {
     status: 200,
     headers: HEADERS,
   });
 }
 
-function errorResponse(message: string, status = 400): Response {
+function errorResponse(message, status = 400) {
   return new Response(JSON.stringify({ success: false, error: message }), {
     status,
     headers: HEADERS,
   });
 }
 
-function typedErrorResponse(
-  key: ErrorCodeKey,
-  message: string,
-  statusOverride?: number
-): Response {
+function typedErrorResponse(key, message, statusOverride) {
   const { code, status } = ERROR_CODES[key];
   return new Response(
     JSON.stringify({ success: false, error: message, errorCode: code }),
@@ -193,17 +76,18 @@ function typedErrorResponse(
   );
 }
 
-function unauthorizedResponse(message = 'Unauthorized'): Response {
+function unauthorizedResponse(message = 'Unauthorized') {
   return errorResponse(message, 401);
 }
 
-function forbiddenResponse(message = 'Forbidden'): Response {
+function forbiddenResponse(message = 'Forbidden') {
   return errorResponse(message, 403);
 }
 
-async function requireAuth(base44: Base44Client): Promise<AuthResult> {
+// ─── Auth & Parsing ───────────────────────────────────────────────────────────
+
+async function requireAuth(base44) {
   try {
-    // @ts-ignore - auth.me is the correct method
     const user = await base44.auth.me();
     if (!user) {
       return { user: null, error: unauthorizedResponse('Authentication required') };
@@ -215,7 +99,7 @@ async function requireAuth(base44: Base44Client): Promise<AuthResult> {
   }
 }
 
-async function parseRequestBody(req: Request): Promise<ParseResult> {
+async function parseRequestBody(req) {
   try {
     const body = await req.json();
     return { data: body };
@@ -227,32 +111,34 @@ async function parseRequestBody(req: Request): Promise<ParseResult> {
   }
 }
 
-function isValidRole(role: unknown): role is ValidRole {
-  return typeof role === 'string' && (VALID_ROLES as readonly string[]).includes(role.toLowerCase());
+// ─── Validation Helpers ───────────────────────────────────────────────────────
+
+function isValidRole(role) {
+  return typeof role === 'string' && VALID_ROLES.includes(role.toLowerCase());
 }
 
-function normaliseRole(role: unknown): ValidRole {
+function normaliseRole(role) {
   if (typeof role === 'string') {
     const lower = role.toLowerCase();
-    if ((VALID_ROLES as readonly string[]).includes(lower)) return lower as ValidRole;
+    if (VALID_ROLES.includes(lower)) return lower;
   }
   return 'child';
 }
 
-function isParent(user: AppUser): boolean {
+function isParent(user) {
   return user.family_role?.toLowerCase() === 'parent';
 }
 
-function getUserFamilyId(user: AppUser): string | null {
+function getUserFamilyId(user) {
   return user.family_id ?? null;
 }
 
-function generateCode(length = 8): string {
+function generateCode(length = 8) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({ length }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-function sanitizeCode(raw: unknown): CodeValidation {
+function sanitizeCode(raw) {
   if (!raw || typeof raw !== 'string') {
     return { valid: false, code: '', error: 'Invite code is required' };
   }
@@ -263,20 +149,17 @@ function sanitizeCode(raw: unknown): CodeValidation {
   return { valid: true, code };
 }
 
-function isExpired(dateStr: string): boolean {
+function isExpired(dateStr) {
   return new Date(dateStr) < new Date();
 }
 
-function calculateExpiryDate(hours = CODE_EXPIRY_HOURS): string {
+function calculateExpiryDate(hours = CODE_EXPIRY_HOURS) {
   const d = new Date();
   d.setHours(d.getHours() + hours);
   return d.toISOString();
 }
 
-function validateLinkingCode(
-  family: Family,
-  sanitizedCode: string
-): { valid: boolean; error?: string } {
+function validateLinkingCode(family, sanitizedCode) {
   if (!family.linking_code) return { valid: false, error: 'No linking code found' };
   if (family.linking_code.toUpperCase() !== sanitizedCode) {
     return { valid: false, error: 'Invalid linking code' };
@@ -287,10 +170,84 @@ function validateLinkingCode(
   return { valid: true };
 }
 
-async function getFamily(
-  base44: Base44Client,
-  familyId: string
-): Promise<FamilyLookup> {
+// ─── Family Cache ─────────────────────────────────────────────────────────────
+
+const FAMILY_CACHE_TTL_MS = 60_000;
+
+class FamilyCache {
+  constructor() {
+    this.mem = new Map();
+    this.kv = null;
+    this._initKv();
+  }
+
+  async _initKv() {
+    try {
+      this.kv = await Deno.openKv();
+    } catch { /* KV not available — mem-only mode */ }
+  }
+
+  async get(id) {
+    const mem = this.mem.get(id);
+    if (mem && mem.expiresAt > Date.now()) return mem.value;
+    this.mem.delete(id);
+
+    if (this.kv) {
+      try {
+        const entry = await this.kv.get(['family_cache', id]);
+        if (entry.value) {
+          this.mem.set(id, { value: entry.value, expiresAt: Date.now() + FAMILY_CACHE_TTL_MS });
+          return entry.value;
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  }
+
+  async set(id, family) {
+    this.mem.set(id, { value: family, expiresAt: Date.now() + FAMILY_CACHE_TTL_MS });
+    if (this.kv) {
+      try {
+        await this.kv.set(['family_cache', id], family, { expireIn: FAMILY_CACHE_TTL_MS });
+      } catch { /* ignore */ }
+    }
+  }
+
+  async invalidate(id) {
+    this.mem.delete(id);
+    if (this.kv) {
+      try { await this.kv.delete(['family_cache', id]); } catch { /* ignore */ }
+    }
+  }
+}
+
+const familyCache = new FamilyCache();
+
+async function invalidateFamilyCache(familyId) {
+  await familyCache.invalidate(familyId);
+}
+
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+
+const rlCache = new Map();
+
+function checkRateLimit(userId, action, maxRequests, windowMs) {
+  const key = `${userId}:${action}`;
+  const now = Date.now();
+  const entry = rlCache.get(key);
+
+  if (!entry || now - entry.windowStart > windowMs) {
+    rlCache.set(key, { count: 1, windowStart: now });
+    return { allowed: true, remaining: maxRequests - 1 };
+  }
+  if (entry.count >= maxRequests) return { allowed: false, remaining: 0 };
+  entry.count++;
+  return { allowed: true, remaining: maxRequests - entry.count };
+}
+
+// ─── Family Lookup ────────────────────────────────────────────────────────────
+
+async function getFamily(base44, familyId) {
   try {
     const cached = await familyCache.get(familyId);
     if (cached) return { family: cached };
@@ -304,11 +261,7 @@ async function getFamily(
   }
 }
 
-function canUserJoinFamilyWithTier(
-  user: AppUser,
-  family: Family,
-  currentSize: number
-): JoinCheckResult {
+function canUserJoinFamilyWithTier(user, family, currentSize) {
   if (user.family_id === family.id) {
     return { allowed: false, reason: 'already_member', message: 'You are already a member of this family' };
   }
@@ -334,93 +287,10 @@ function canUserJoinFamilyWithTier(
   return { allowed: true };
 }
 
-const FAMILY_CACHE_TTL_MS = 60_000;
+// ─── Rollback ─────────────────────────────────────────────────────────────────
 
-interface CacheEntry<T> {
-  value: T;
-  expiresAt: number;
-}
-
-class FamilyCache {
-  private mem = new Map<string, CacheEntry<Family>>();
-  private kv: any = null;
-
-  constructor() { this._initKv(); }
-
-  private async _initKv() {
-    try {
-      this.kv = await (Deno as any).openKv();
-    } catch { /* KV not available — mem-only mode */ }
-  }
-
-  async get(id: string): Promise<Family | null> {
-    const mem = this.mem.get(id);
-    if (mem && mem.expiresAt > Date.now()) return mem.value;
-    this.mem.delete(id);
-
-    if (this.kv) {
-      try {
-        const entry = await this.kv.get<Family>(['family_cache', id]);
-        if (entry.value) {
-          this.mem.set(id, { value: entry.value, expiresAt: Date.now() + FAMILY_CACHE_TTL_MS });
-          return entry.value;
-        }
-      } catch { /* ignore */ }
-    }
-    return null;
-  }
-
-  async set(id: string, family: Family): Promise<void> {
-    this.mem.set(id, { value: family, expiresAt: Date.now() + FAMILY_CACHE_TTL_MS });
-    if (this.kv) {
-      try {
-        await this.kv.set(['family_cache', id], family, { expireIn: FAMILY_CACHE_TTL_MS });
-      } catch { /* ignore */ }
-    }
-  }
-
-  async invalidate(id: string): Promise<void> {
-    this.mem.delete(id);
-    if (this.kv) {
-      try { await this.kv.delete(['family_cache', id]); } catch { /* ignore */ }
-    }
-  }
-}
-
-const familyCache = new FamilyCache();
-
-async function invalidateFamilyCache(familyId: string): Promise<void> {
-  await familyCache.invalidate(familyId);
-}
-
-interface RateLimitEntry { count: number; windowStart: number; }
-const rlCache = new Map<string, RateLimitEntry>();
-
-function checkRateLimit(
-  userId: string,
-  action: string,
-  maxRequests: number,
-  windowMs: number
-): RateLimitResult {
-  const key = `${userId}:${action}`;
-  const now = Date.now();
-  const entry = rlCache.get(key);
-
-  if (!entry || now - entry.windowStart > windowMs) {
-    rlCache.set(key, { count: 1, windowStart: now });
-    return { allowed: true, remaining: maxRequests - 1 };
-  }
-  if (entry.count >= maxRequests) return { allowed: false, remaining: 0 };
-  entry.count++;
-  return { allowed: true, remaining: maxRequests - entry.count };
-}
-
-async function rollbackJoin(
-  base44: Base44Client,
-  state: RollbackState,
-  callerName: string
-): Promise<void> {
-  const errors: string[] = [];
+async function rollbackJoin(base44, state, callerName) {
+  const errors = [];
 
   if (state.personId) {
     try {
@@ -460,11 +330,13 @@ async function rollbackJoin(
   }
 }
 
-function logInfo(context: string, message: string, data?: Record<string, unknown>): void {
+// ─── Logging ──────────────────────────────────────────────────────────────────
+
+function logInfo(context, message, data) {
   console.log(JSON.stringify({ level: 'INFO', context, message, ...data, ts: new Date().toISOString() }));
 }
 
-function logError(context: string, error: unknown, data?: Record<string, unknown>): void {
+function logError(context, error, data) {
   const message = error instanceof Error ? error.message : String(error);
   const stack = error instanceof Error ? error.stack : undefined;
   console.error(JSON.stringify({ level: 'ERROR', context, message, stack, ...data, ts: new Date().toISOString() }));
@@ -474,7 +346,7 @@ function logError(context: string, error: unknown, data?: Record<string, unknown
 
 const CALLER = 'familyLinking';
 
-async function handleGenerateCode(base44: Base44Client, user: AppUser, familyId: string) {
+async function handleGenerateCode(base44, user, familyId) {
   if (!isParent(user)) return errorResponse('Only parents can generate linking codes', 403);
 
   const rateLimit = checkRateLimit(user.id, 'generate_linking_code', 5, 5 * 60 * 1000);
@@ -500,13 +372,13 @@ async function handleGenerateCode(base44: Base44Client, user: AppUser, familyId:
   return successResponse({ linkingCode: newCode, expiresAt });
 }
 
-async function handleJoinFamily(base44: Base44Client, user: AppUser, linkingCode: string) {
+async function handleJoinFamily(base44, user, linkingCode) {
   const { valid, code: sanitizedCode, error: codeErr } = sanitizeCode(linkingCode);
   if (!valid) return typedErrorResponse('INVALID_CODE', codeErr ?? 'Invalid code format');
 
   const roleToAssign = isValidRole(user.family_role) ? user.family_role : 'child';
 
-  let families: Family[];
+  let families;
   try {
     families = await base44.asServiceRole.entities.Family.filter({ linking_code: sanitizedCode });
   } catch (err) {
@@ -528,7 +400,7 @@ async function handleJoinFamily(base44: Base44Client, user: AppUser, linkingCode
 
   const joinCheck = canUserJoinFamilyWithTier(user, family, originalMembers.length);
   if (!joinCheck.allowed) {
-    const keyMap: Record<string, Parameters<typeof typedErrorResponse>[0]> = {
+    const keyMap = {
       already_member:     'ALREADY_MEMBER',
       already_in_family:  'ALREADY_IN_FAMILY',
       family_full:        'FAMILY_FULL',
@@ -543,7 +415,7 @@ async function handleJoinFamily(base44: Base44Client, user: AppUser, linkingCode
   }
 
   const updatedMembers = [...originalMembers, user.id];
-  let newPerson: Person | null = null;
+  let newPerson = null;
 
   try {
     newPerson = await base44.asServiceRole.entities.Person.create({
@@ -612,7 +484,7 @@ async function handleJoinFamily(base44: Base44Client, user: AppUser, linkingCode
   return successResponse({ familyName: family.name, familyId: family.id, personId: newPerson.id });
 }
 
-function notifyParentsAsync(base44: Base44Client, joiner: AppUser, family: Family, joinerRole: string): void {
+function notifyParentsAsync(base44, joiner, family, joinerRole) {
   (async () => {
     try {
       const familyPeople = await base44.asServiceRole.entities.Person.filter({
@@ -623,10 +495,10 @@ function notifyParentsAsync(base44: Base44Client, joiner: AppUser, family: Famil
 
       await Promise.allSettled(
         familyPeople
-          .filter((p: Person) => p.linked_user_id && p.linked_user_id !== joiner.id)
-          .map(async (parentPerson: Person) => {
+          .filter((p) => p.linked_user_id && p.linked_user_id !== joiner.id)
+          .map(async (parentPerson) => {
             try {
-              const parentUser = await base44.asServiceRole.entities.User.get(parentPerson.linked_user_id!);
+              const parentUser = await base44.asServiceRole.entities.User.get(parentPerson.linked_user_id);
               if (!parentUser?.email) return;
               await base44.asServiceRole.integrations.Core.SendEmail({
                 to: parentUser.email,
@@ -648,14 +520,14 @@ function notifyParentsAsync(base44: Base44Client, joiner: AppUser, family: Famil
   })();
 }
 
-async function handleUnlinkAccount(base44: Base44Client, user: AppUser, personId: string) {
+async function handleUnlinkAccount(base44, user, personId) {
   if (!isParent(user)) return forbiddenResponse('Only parents can unlink accounts');
 
   const userFamilyId = getUserFamilyId(user);
   if (!userFamilyId) return errorResponse('You are not part of any family');
 
-  let person: Person;
-  let family: Family | null;
+  let person;
+  let family;
   try {
     const [fetchedPerson, { family: fetchedFamily }] = await Promise.all([
       base44.asServiceRole.entities.Person.get(personId),
@@ -696,18 +568,18 @@ async function handleUnlinkAccount(base44: Base44Client, user: AppUser, personId
   return successResponse({ personId });
 }
 
-async function handleGetMembers(base44: Base44Client, user: AppUser) {
+async function handleGetMembers(base44, user) {
   const userFamilyId = getUserFamilyId(user);
   if (!userFamilyId) return errorResponse('You are not part of any family');
 
-  let people: Person[];
+  let people;
   try {
     people = await base44.asServiceRole.entities.Person.filter({ family_id: userFamilyId });
   } catch {
     return errorResponse('Failed to fetch family members', 500);
   }
 
-  const members = people.map((p: Person) => ({
+  const members = people.map((p) => ({
     id: p.id,
     name: p.name,
     role: p.role,
@@ -718,10 +590,12 @@ async function handleGetMembers(base44: Base44Client, user: AppUser) {
   return successResponse({ members });
 }
 
-Deno.serve(async (req: Request) => {
+// ─── Server Entry Point ───────────────────────────────────────────────────────
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: HEADERS });
 
-  const base44 = createClientFromRequest(req) as Base44Client;
+  const base44 = createClientFromRequest(req);
 
   try {
     const [{ user, error: authError }, { data: body, error: parseError }] = await Promise.all([
@@ -731,28 +605,23 @@ Deno.serve(async (req: Request) => {
     if (authError) return authError;
     if (parseError) return parseError;
 
-    const { action, linkingCode, familyId, personId } = body as {
-      action?: string;
-      linkingCode?: string;
-      familyId?: string;
-      personId?: string;
-    };
+    const { action, linkingCode, familyId, personId } = body;
 
     switch (action) {
       case 'generate':
         if (!familyId) return errorResponse('Family ID required for code generation');
-        return handleGenerateCode(base44, user!, familyId);
+        return handleGenerateCode(base44, user, familyId);
 
       case 'join':
         if (!linkingCode) return errorResponse('Linking code required to join family');
-        return handleJoinFamily(base44, user!, linkingCode);
+        return handleJoinFamily(base44, user, linkingCode);
 
       case 'unlink':
         if (!personId) return errorResponse('Person ID required for unlinking');
-        return handleUnlinkAccount(base44, user!, personId);
+        return handleUnlinkAccount(base44, user, personId);
 
       case 'getMembers':
-        return handleGetMembers(base44, user!);
+        return handleGetMembers(base44, user);
 
       default:
         return errorResponse('Invalid action. Use "generate", "join", "unlink", or "getMembers"');
