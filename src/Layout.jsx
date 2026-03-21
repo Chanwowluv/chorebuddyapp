@@ -458,7 +458,7 @@ function AppLayout({
     const checkAuth = async () => {
       try {
         const userData = await base44.auth.me();
-        setIsAuthenticated(true); // Fix: was called without argument
+        setIsAuthenticated(false); // Fix: was called without argument
         setCurrentUser(userData);
 
         // Redirect to role selection if no role set
