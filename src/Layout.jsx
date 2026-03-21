@@ -448,7 +448,7 @@ function AppLayout({
           setIsAuthenticated(false);
           setCurrentUser(null);
         } finally {
-          setAuthChecked(false);
+          setAuthChecked(true);
         }
       };
       checkAuthSilently();
