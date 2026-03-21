@@ -77,7 +77,7 @@ import RoleSelection from './pages/RoleSelection';
 import Schedule from './pages/Schedule';
 import Store from './pages/Store';
 import Templates from './pages/Templates';
-import Layout from './Layout.jsx';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
