@@ -10,9 +10,9 @@ import { Link } from 'react-router-dom';
 import { Loader2, User as UserIcon, Bell, Users, Settings, Shield, CreditCard, AlertCircle, Link2, Sparkles, Palette, Crown, RefreshCw, Copy, Check, Clock, Zap, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from "sonner";
 import { generateLinkingCode, joinFamilyByCode } from '@/utils/familyLinkingClient';
-import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import LinkAccountModal from '@/components/people/LinkAccountModal';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import AvatarSelector from '@/components/profile/AvatarSelector';
@@ -70,6 +70,10 @@ export default function Account() {
   const [joinCode, setJoinCode] = useState('');
   const [isJoiningFamily, setIsJoiningFamily] = useState(false);
   const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
+  const [deleteStep, setDeleteStep] = useState(1);
+  const [deleteIdentityInput, setDeleteIdentityInput] = useState('');
+  const [deletePhraseInput, setDeletePhraseInput] = useState('');
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const { currentTheme, updateTheme } = useTheme();
 
   // Determine effective subscription tier (child/teen/toddler inherits parent's)
@@ -204,13 +208,49 @@ export default function Account() {
     }
   };
 
+  const resetDeleteFlow = () => {
+    setShowDeleteAccountConfirm(false);
+    setDeleteStep(1);
+    setDeleteIdentityInput('');
+    setDeletePhraseInput('');
+    setIsDeletingAccount(false);
+  };
+
   const handleDeleteAccount = async () => {
+    if (!user) return;
+    const identityValue = deleteIdentityInput.trim().toLowerCase();
+    const userEmail = (user.email || '').trim().toLowerCase();
+    if (identityValue !== userEmail) {
+      toast.error('Please enter your email exactly to continue.');
+      return;
+    }
+    if (deletePhraseInput.trim().toUpperCase() !== 'DELETE MY ACCOUNT') {
+      toast.error('Type DELETE MY ACCOUNT exactly to confirm deletion.');
+      return;
+    }
+
+    setIsDeletingAccount(true);
     try {
-      await base44.auth.deleteMe();
+      // Re-validate active session before destructive operation.
+      await base44.auth.me();
+      const result = await base44.functions.invoke('deleteAccount', {
+        confirmationText: deletePhraseInput.trim(),
+      });
+      if (!result?.data?.success) {
+        const errorCode = result?.data?.errorCode;
+        if (errorCode === 'AUTH_REQUIRED') {
+          throw new Error('Your session expired. Please log in again and retry.');
+        }
+        throw new Error(result?.data?.error || 'Account deletion failed.');
+      }
+      resetDeleteFlow();
+      toast.success('Your account has been deleted.');
       window.location.href = '/';
     } catch (error) {
-      toast.error("Failed to delete account. Please contact support.");
+      toast.error(error?.message || "Failed to delete account. Please contact support.");
       console.error("Error deleting account:", error);
+    } finally {
+      setIsDeletingAccount(false);
     }
   };
 
@@ -480,14 +520,100 @@ export default function Account() {
                 </div>
               </div>
 
-              <ConfirmDialog
-                isOpen={showDeleteAccountConfirm}
-                onClose={() => setShowDeleteAccountConfirm(false)}
-                onConfirm={handleDeleteAccount}
-                title="Delete Account"
-                message="This will permanently delete your account and all your data, including chore history, achievements, and family connections. This action cannot be undone."
-                confirmText="Delete My Account"
-                variant="destructive" />
+              <Dialog open={showDeleteAccountConfirm && deleteStep === 1} onOpenChange={(open) => !open && resetDeleteFlow()}>
+                <DialogContent className="funky-card max-w-xl border-4 border-red-500">
+                  <DialogHeader>
+                    <DialogTitle className="header-font text-2xl text-red-600 flex items-center gap-2">
+                      <AlertCircle className="w-6 h-6" />
+                      Delete Account: Step 1 of 3
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 body-font-light text-gray-700">
+                    <p>This action permanently deletes your account and cannot be undone.</p>
+                    <p><strong>Deleted immediately:</strong> your user account, linked person profile, preferences, and your direct access to family data.</p>
+                    <p><strong>If you are family owner:</strong> the entire family workspace and all related records are permanently deleted.</p>
+                    <p><strong>Retained where required:</strong> minimal operational logs may remain for compliance and incident auditing.</p>
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <Button onClick={resetDeleteFlow} className="funky-button flex-1 bg-gray-200 text-[#5E3B85] border-3 border-[#5E3B85]">
+                      Cancel
+                    </Button>
+                    <Button onClick={() => setDeleteStep(2)} className="funky-button flex-1 bg-red-600 text-white">
+                      I Understand, Continue
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={showDeleteAccountConfirm && deleteStep === 2} onOpenChange={(open) => !open && resetDeleteFlow()}>
+                <DialogContent className="funky-card max-w-xl border-4 border-red-500">
+                  <DialogHeader>
+                    <DialogTitle className="header-font text-2xl text-red-600 flex items-center gap-2">
+                      <Shield className="w-6 h-6" />
+                      Verify Identity: Step 2 of 3
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 body-font-light text-gray-700">
+                    <p>For security, confirm your account email before continuing.</p>
+                    <Input
+                      value={deleteIdentityInput}
+                      onChange={(e) => setDeleteIdentityInput(e.target.value)}
+                      placeholder="Enter your account email"
+                      className="funky-button border-3 border-[#5E3B85] bg-white"
+                    />
+                    <p className="text-sm text-gray-500">Expected: {user.email}</p>
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <Button onClick={() => setDeleteStep(1)} className="funky-button flex-1 bg-gray-200 text-[#5E3B85] border-3 border-[#5E3B85]">
+                      Back
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (deleteIdentityInput.trim().toLowerCase() !== (user.email || '').trim().toLowerCase()) {
+                          toast.error('Please enter your email exactly to continue.');
+                          return;
+                        }
+                        setDeleteStep(3);
+                      }}
+                      className="funky-button flex-1 bg-red-600 text-white"
+                    >
+                      Continue
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={showDeleteAccountConfirm && deleteStep === 3} onOpenChange={(open) => !open && resetDeleteFlow()}>
+                <DialogContent className="funky-card max-w-xl border-4 border-red-500">
+                  <DialogHeader>
+                    <DialogTitle className="header-font text-2xl text-red-600 flex items-center gap-2">
+                      <Trash2 className="w-6 h-6" />
+                      Final Confirmation: Step 3 of 3
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 body-font-light text-gray-700">
+                    <p>Type <strong>DELETE MY ACCOUNT</strong> to permanently remove your account.</p>
+                    <Input
+                      value={deletePhraseInput}
+                      onChange={(e) => setDeletePhraseInput(e.target.value)}
+                      placeholder="DELETE MY ACCOUNT"
+                      className="funky-button border-3 border-[#5E3B85] bg-white"
+                    />
+                  </div>
+                  <div className="flex gap-3 mt-2">
+                    <Button onClick={() => setDeleteStep(2)} className="funky-button flex-1 bg-gray-200 text-[#5E3B85] border-3 border-[#5E3B85]">
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleDeleteAccount}
+                      disabled={isDeletingAccount}
+                      className="funky-button flex-1 bg-red-700 hover:bg-red-800 text-white"
+                    >
+                      {isDeletingAccount ? 'Deleting...' : 'Delete My Account'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
 
           </div>
         </TabsContent>
