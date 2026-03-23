@@ -412,6 +412,12 @@ function AppLayout({
     const allItems = [...navigationItems, ...utilityNavItems];
     return new Set(allItems.map(item => item.url).concat(['/']));
   }, []);
+  const isRootPage = rootPaths.has(location.pathname);
+  const mobileFallbackPath = createPageUrl("Dashboard");
+  // When base44 client uses requiresAuth: false, we must manage auth state manually.
+  const canGoBack =
+    !isRootPage &&
+    ((location.key && location.key !== "default") || window.history.length > 1);
 
   useEffect(() => {
     const prevPath = prevPathRef.current;
@@ -458,7 +464,7 @@ function AppLayout({
     const checkAuth = async () => {
       try {
         const userData = await base44.auth.me();
-        setIsAuthenticated(false); // Fix: was called without argument
+        setIsAuthenticated(true);
         setCurrentUser(userData);
 
         // Redirect to role selection if no role set
@@ -594,7 +600,12 @@ function AppLayout({
 
         {/* ── Main Content ─────────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
-          <MobileHeader currentPageName={currentPageName} />
+          <MobileHeader
+            currentPageName={currentPageName}
+            isRootPage={isRootPage}
+            canGoBack={canGoBack}
+            fallbackPath={mobileFallbackPath}
+          />
           <div className="pt-mobile-header lg:pt-0 overflow-x-hidden">
             <AnimatePresence mode="popLayout" custom={directionRef.current}>
               <motion.div
