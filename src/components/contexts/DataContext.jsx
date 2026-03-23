@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useOfflineSync } from '../hooks/useOfflineSync';
 import { offlineStorage, STORES } from '../utils/offlineStorage';
 import { canManageFamily as canManageFamilyUtil, isFamilyOwner as isFamilyOwnerUtil } from '@/components/utils';
@@ -17,6 +18,11 @@ const DataContext = createContext();
 
 // Only keep completions and rewards from the last 60 days to avoid unbounded growth
 const DATA_RETENTION_DAYS = 60;
+const queryKeys = {
+  people: (familyId) => ['people', familyId || 'global'],
+  chores: (familyId) => ['chores', familyId || 'global'],
+  assignments: (familyId) => ['assignments', familyId || 'global'],
+};
 
 export const useData = () => {
   const context = useContext(DataContext);
@@ -28,6 +34,7 @@ export const useData = () => {
 
 export const DataProvider = ({ children }) => {
   const { isAuthenticated: isAuthed, isLoadingAuth } = useAuth();
+  const queryClient = useQueryClient();
 
   // Core state
   const [people, setPeople] = useState([]);
@@ -418,17 +425,11 @@ export const DataProvider = ({ children }) => {
     }
   }, [user, requireParentRole, ensureFamily]);
 
-  // ==========================================
-  // PERSON ACTIONS
-  // ==========================================
-
-  const addPerson = useCallback((data) =>
-    wrapProcessing(async () => {
-      requireParentRole();
-      await ensureFamily();
-
-      const newPerson = await invokeParentCrud('Person', 'create', {
-        ...data,
+  const addPersonMutation = useMutation({
+    mutationFn: async (payload) => {
+      const { _optimisticId, ...personData } = payload;
+      return invokeParentCrud('Person', 'create', {
+        ...personData,
         is_active: true,
         points_balance: 0,
         total_points_earned: 0,
@@ -438,24 +439,213 @@ export const DataProvider = ({ children }) => {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
+    },
+    onMutate: async (payload) => {
+      const key = queryKeys.people(user?.family_id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousPeople = people;
+      const { _optimisticId, ...optimisticFields } = payload;
+      const optimisticPerson = {
+        ...optimisticFields,
+        id: payload._optimisticId,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString()
+      };
+      setPeople((prev) => [...prev, optimisticPerson]);
+      queryClient.setQueryData(key, (old = []) => [...old, optimisticPerson]);
+      return { previousPeople, optimisticId: payload._optimisticId };
+    },
+    onError: (error, _payload, context) => {
+      if (context?.previousPeople) {
+        setPeople(context.previousPeople);
+        queryClient.setQueryData(queryKeys.people(user?.family_id), context.previousPeople);
+      }
+      toast.error(error.message || "Failed to add family member.");
+    },
+    onSuccess: (createdPerson, _payload, context) => {
+      setPeople((prev) =>
+        prev.map((person) => (person.id === context?.optimisticId ? createdPerson : person))
+      );
+      queryClient.setQueryData(queryKeys.people(user?.family_id), (old = []) =>
+        old.map((person) => (person.id === context?.optimisticId ? createdPerson : person))
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.people(user?.family_id) });
+    }
+  });
 
-      console.log("[DataContext] Person created:", newPerson.id);
+  const updatePersonMutation = useMutation({
+    mutationFn: ({ id, data }) =>
+      invokeParentCrud('Person', 'update', {
+        ...data,
+        updated_at: new Date().toISOString()
+      }, id),
+    onMutate: async ({ id, data }) => {
+      const key = queryKeys.people(user?.family_id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousPeople = people;
+      const patch = { ...data, updated_at: new Date().toISOString() };
+      setPeople((prev) => prev.map((person) => person.id === id ? { ...person, ...patch } : person));
+      queryClient.setQueryData(key, (old = []) =>
+        old.map((person) => (person.id === id ? { ...person, ...patch } : person))
+      );
+      return { previousPeople };
+    },
+    onError: (error, _payload, context) => {
+      if (context?.previousPeople) {
+        setPeople(context.previousPeople);
+        queryClient.setQueryData(queryKeys.people(user?.family_id), context.previousPeople);
+      }
+      toast.error(error.message || "Failed to update family member.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.people(user?.family_id) });
+    }
+  });
+
+  const addChoreMutation = useMutation({
+    mutationFn: async (payload) => {
+      const { _optimisticId, ...choreData } = payload;
+      return invokeParentCrud('Chore', 'create', {
+        ...choreData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    },
+    onMutate: async (payload) => {
+      const key = queryKeys.chores(user?.family_id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousChores = chores;
+      const { _optimisticId, ...optimisticFields } = payload;
+      const optimisticChore = {
+        ...optimisticFields,
+        id: payload._optimisticId,
+        created_date: new Date().toISOString(),
+        updated_date: new Date().toISOString()
+      };
+      setChores((prev) => [...prev, optimisticChore]);
+      queryClient.setQueryData(key, (old = []) => [...old, optimisticChore]);
+      return { previousChores, optimisticId: payload._optimisticId };
+    },
+    onError: (error, _payload, context) => {
+      if (context?.previousChores) {
+        setChores(context.previousChores);
+        queryClient.setQueryData(queryKeys.chores(user?.family_id), context.previousChores);
+      }
+      toast.error(error.message || "Failed to add chore.");
+    },
+    onSuccess: (createdChore, _payload, context) => {
+      setChores((prev) =>
+        prev.map((chore) => (chore.id === context?.optimisticId ? createdChore : chore))
+      );
+      queryClient.setQueryData(queryKeys.chores(user?.family_id), (old = []) =>
+        old.map((chore) => (chore.id === context?.optimisticId ? createdChore : chore))
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chores(user?.family_id) });
+    }
+  });
+
+  const updateChoreMutation = useMutation({
+    mutationFn: ({ id, data }) =>
+      invokeParentCrud('Chore', 'update', {
+        ...data,
+        updated_at: new Date().toISOString()
+      }, id),
+    onMutate: async ({ id, data }) => {
+      const key = queryKeys.chores(user?.family_id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousChores = chores;
+      const patch = { ...data, updated_at: new Date().toISOString() };
+      setChores((prev) => prev.map((chore) => chore.id === id ? { ...chore, ...patch } : chore));
+      queryClient.setQueryData(key, (old = []) =>
+        old.map((chore) => (chore.id === id ? { ...chore, ...patch } : chore))
+      );
+      return { previousChores };
+    },
+    onError: (error, _payload, context) => {
+      if (context?.previousChores) {
+        setChores(context.previousChores);
+        queryClient.setQueryData(queryKeys.chores(user?.family_id), context.previousChores);
+      }
+      toast.error(error.message || "Failed to update chore.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.chores(user?.family_id) });
+    }
+  });
+
+  const updateAssignmentMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Assignment.update(id, {
+      ...data,
+      updated_at: new Date().toISOString()
+    }),
+    onMutate: async ({ id, data }) => {
+      const key = queryKeys.assignments(user?.family_id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previousAssignments = assignments;
+      const patch = { ...data, updated_at: new Date().toISOString() };
+      setAssignments((prev) => prev.map((assignment) => assignment.id === id ? { ...assignment, ...patch } : assignment));
+      queryClient.setQueryData(key, (old = []) =>
+        old.map((assignment) => (assignment.id === id ? { ...assignment, ...patch } : assignment))
+      );
+      return { previousAssignments };
+    },
+    onError: (error, _payload, context) => {
+      if (context?.previousAssignments) {
+        setAssignments(context.previousAssignments);
+        queryClient.setQueryData(queryKeys.assignments(user?.family_id), context.previousAssignments);
+      }
+      toast.error(error.message || "Failed to update assignment.");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.assignments(user?.family_id) });
+    }
+  });
+
+  // ==========================================
+  // PERSON ACTIONS
+  // ==========================================
+
+  const addPerson = useCallback(async (data) => {
+    setIsProcessing(true);
+    try {
+      requireParentRole();
+      await ensureFamily();
+      const payload = {
+        ...data,
+        _optimisticId: `temp-person-${Date.now()}`
+      };
+      const newPerson = await addPersonMutation.mutateAsync(payload);
+      toast.success("Family member added!");
       return newPerson;
-    }, "Family member added!")
-  , [wrapProcessing, ensureFamily, requireParentRole, invokeParentCrud]);
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [ensureFamily, requireParentRole, addPersonMutation]);
 
-  const updatePerson = useCallback((id, data) =>
-    wrapProcessing(
-      () => {
-        requireParentRole();
-        return invokeParentCrud('Person', 'update', {
-          ...data,
-          updated_at: new Date().toISOString()
-        }, id);
-      },
-      "Family member updated!"
-    )
-  , [wrapProcessing, requireParentRole, invokeParentCrud]);
+  const updatePerson = useCallback(async (id, data) => {
+    setIsProcessing(true);
+    try {
+      requireParentRole();
+      const result = await updatePersonMutation.mutateAsync({
+        id,
+        data
+      });
+      toast.success("Family member updated!");
+      return result;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [requireParentRole, updatePersonMutation]);
 
   const deletePerson = useCallback((id) =>
     wrapProcessing(
@@ -471,34 +661,43 @@ export const DataProvider = ({ children }) => {
   // CHORE ACTIONS
   // ==========================================
 
-  const addChore = useCallback((data) =>
-    wrapProcessing(async () => {
+  const addChore = useCallback(async (data) => {
+    setIsProcessing(true);
+    try {
       requireParentRole();
       await ensureFamily();
-
-      const newChore = await invokeParentCrud('Chore', 'create', {
+      const payload = {
         ...data,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-
-      console.log("[DataContext] Chore created:", newChore.id);
+        _optimisticId: `temp-chore-${Date.now()}`
+      };
+      const newChore = await addChoreMutation.mutateAsync(payload);
+      toast.success("Chore added!");
       return newChore;
-    }, "Chore added!")
-  , [wrapProcessing, ensureFamily, requireParentRole, invokeParentCrud]);
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [ensureFamily, requireParentRole, addChoreMutation]);
 
-  const updateChore = useCallback((id, data) =>
-    wrapProcessing(
-      () => {
-        requireParentRole();
-        return invokeParentCrud('Chore', 'update', {
-          ...data,
-          updated_at: new Date().toISOString()
-        }, id);
-      },
-      "Chore updated!"
-    )
-  , [wrapProcessing, requireParentRole, invokeParentCrud]);
+  const updateChore = useCallback(async (id, data) => {
+    setIsProcessing(true);
+    try {
+      requireParentRole();
+      const result = await updateChoreMutation.mutateAsync({
+        id,
+        data
+      });
+      toast.success("Chore updated!");
+      return result;
+    } catch (error) {
+      setError(error.message);
+      throw error;
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [requireParentRole, updateChoreMutation]);
 
   const deleteChore = useCallback((id) =>
     wrapProcessing(
@@ -539,14 +738,11 @@ export const DataProvider = ({ children }) => {
     }
     
     // Online mode
-    return wrapProcessing(
-      () => base44.entities.Assignment.update(id, {
-        ...data,
-        updated_at: new Date().toISOString()
-      }),
-      null // Don't show success toast for assignment updates (too frequent)
-    );
-  }, [isOnline, wrapProcessing, loadPendingCount]);
+    return updateAssignmentMutation.mutateAsync({
+      id,
+      data
+    });
+  }, [isOnline, loadPendingCount, updateAssignmentMutation]);
 
   const createAssignment = useCallback((data) =>
     wrapProcessing(async () => {
